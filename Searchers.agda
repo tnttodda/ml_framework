@@ -1,6 +1,10 @@
 open import ToddPrelude
 open import CantorNumbers
 
+record CompactSpace {X : Set} (Σ : (X → 𝔹) → X) : Set₁ where
+  field
+    def2 : (p : X → 𝔹) → ∃ (λ x₀ → p x₀ ≡ tt) → (p (Σ p)) ≡ tt
+
 ℰ : (d : Set) → Set
 ℰ d = (d → 𝔹) → d
 
@@ -14,6 +18,19 @@ forevery s p = ! forsome s (λ x → ! p x)
 ℰℕ : ℕ → ℰ ℕ
 ℰℕ zero p = zero
 ℰℕ (succ n) p = if (p n) then (n) else (ℰℕ n p)
+
+head' : {X : ℕ → Set} → ((n : ℕ) → X n) → X zero
+head' α = α zero
+tail' : {X : ℕ → Set} → ((n : ℕ) → X n) → ((n : ℕ) → X (succ n))
+tail' α n = α (succ n)
+
+-- ℕisCompact : (n : ℕ) → CompactSpace (ℰℕ n)
+-- CompactSpace.def2 (ℕisCompact n) p (w ⇒ x) = {!!} where 
+--  x₀ : 𝔹
+--  x₀ = p w
+--  pr : ∀ n → (ℰℕ n p) ≡ w
+--  pr zero = {!!}
+--  pr (succ n) = {!!}
 
 ℰ𝔹 : ℰ 𝔹
 ℰ𝔹 p = if (p tt) then (tt) else (ff)

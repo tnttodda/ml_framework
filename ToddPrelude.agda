@@ -81,3 +81,6 @@ data _∧_ (A B : Set) : Set where
 
 _⊕_ : 𝔹 → 𝔹 → Set
 a ⊕ b = ((a ≡ tt) ∧ (b ≡ ff)) ∨ ((a ≡ ff) ∧ (b ≡ tt))
+
+data ∃ {X : Set} (P : X → Set) : Set where
+  _⇒_ : (w : X) → P w → ∃ (λ x → P x)
