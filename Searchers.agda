@@ -1,5 +1,6 @@
 open import ToddPrelude
 open import CantorNumbers
+open import RealNumbers
 
 record CompactSpace {X : Set} (Σ : (X → 𝔹) → X) : Set₁ where
   field
@@ -54,3 +55,6 @@ tail' α n = α (succ n)
 
 ℰℂ : ℰ ℂ
 ℰℂ = ℰℕ→ (λ i → ℰ𝕓)
+
+ℰℝ : ℕ → ℰ ℝ
+ℰℝ n = ℰ× (ℰℕ n) ℰℂ
