@@ -5,7 +5,7 @@ open import Searchers
 
 record LossSpace {Y : Set} (Φ : Y → Y → ℝ) : Set₁ where
   field
-    pos : ∀ y₁ y₂ ε → ((ℝ₀ <ℝ Φ y₁ y₂) ε ≡ tt) ∨ ((ℝ₀ =ℝ Φ y₁ y₂) ε ≡ tt)
+    pos : ∀ y₁ y₂ ε → ((ℝ₀ <ℝ (Φ y₁ y₂ , ε)) ≡ tt) ∨ ((ℝ₀ =ℝ (Φ y₁ y₂ , ε)) ≡ tt)
     ref : ∀ y₁ → (Φ y₁ y₁ ≡ ℝ₀)
     sym : ∀ y₁ y₂ → (Φ y₁ y₂) ≡ (Φ y₂ y₁)
 
@@ -14,7 +14,7 @@ record LossSpace {Y : Set} (Φ : Y → Y → ℝ) : Set₁ where
 
 ℕisLoss : LossSpace Φℕ
 LossSpace.pos ℕisLoss zero zero ε = inr (lem ε) where
-  lem : ∀ ε → (ℝ₀ =ℝ Φℕ zero zero) ε ≡ tt
+  lem : ∀ ε → (ℝ₀ =ℝ (Φℕ zero zero , ε)) ≡ tt
   lem zero = refl
   lem (succ ε) = lem ε
 LossSpace.pos ℕisLoss zero (succ y₂) ε = inl refl
@@ -49,13 +49,13 @@ LossSpace.sym ℕisLoss y₁ y₂ = cong≡ (λ ■ → ■ , ℂ₀) (lem y₁ 
 
 𝕓isLoss : LossSpace Φ𝕓
 LossSpace.pos 𝕓isLoss ₀ ₀ ε = inr (lem ε) where
-  lem : ∀ ε → (ℝ₀ =ℝ Φ𝕓 ₀ ₀) ε ≡ tt
+  lem : ∀ ε → (ℝ₀ =ℝ (Φ𝕓 ₀ ₀ , ε)) ≡ tt
   lem zero = refl
   lem (succ ε) = lem ε
 LossSpace.pos 𝕓isLoss ₀ ₁ ε = inl refl
 LossSpace.pos 𝕓isLoss ₁ ₀ ε = inl refl
 LossSpace.pos 𝕓isLoss ₁ ₁ ε = inr (lem ε) where
-  lem : ∀ ε → (ℝ₀ =ℝ Φ𝕓 ₁ ₁) ε ≡ tt
+  lem : ∀ ε → (ℝ₀ =ℝ (Φ𝕓 ₁ ₁ , ε)) ≡ tt
   lem zero = refl
   lem (succ ε) = lem ε  
 LossSpace.ref 𝕓isLoss ₀ = refl
@@ -79,4 +79,11 @@ isNorm f c (succ e) = isNormAt f c (succ e) && isNorm f c e
 
 supNorm : (ℂ → ℂ) → ℕ → ℂ
 supNorm f e n = ℰℂ (λ c → isNorm f c e) n
+
+Φℂ→ℂ : ℕ → (ℂ → ℂ) → (ℂ → ℂ) → ℝ
+Φℂ→ℂ n f g = zero , maxℂ (supNorm f n) (supNorm g n)
+
+Φℕ→ℕ : ℕ → (ℕ → ℕ) → (ℕ → ℕ) → ℝ
+Φℕ→ℕ zero f g = (f zero −ℕ g zero) , ℂ₀
+Φℕ→ℕ (succ n) f g = ((f n −ℕ g n) +ℕ π₁ (Φℕ→ℕ n f g)) , ℂ₀
 

@@ -2,12 +2,12 @@ open import ToddPrelude
 open import CantorNumbers
 open import RealNumbers
 
-record CompactSpace {X : Set} (Σ : (X → 𝔹) → X) : Set₁ where
-  field
-    def2 : (p : X → 𝔹) → ∃ (λ x₀ → p x₀ ≡ tt) → (p (Σ p)) ≡ tt
-
 ℰ : (d : Set) → Set
 ℰ d = (d → 𝔹) → d
+
+record CompactSpace {X : Set} (Σ : ℰ X) : Set where
+  field
+    def2 : (p : X → 𝔹) → ∃ (λ x₀ → p x₀ ≡ tt) → (p (Σ p)) ≡ tt
 
 Π : (d : Set) → Set
 Π d = (d → 𝔹) → 𝔹
@@ -20,18 +20,19 @@ forevery s p = ! forsome s (λ x → ! p x)
 ℰℕ zero p = zero
 ℰℕ (succ n) p = if (p n) then (n) else (ℰℕ n p)
 
-head' : {X : ℕ → Set} → ((n : ℕ) → X n) → X zero
-head' α = α zero
-tail' : {X : ℕ → Set} → ((n : ℕ) → X n) → ((n : ℕ) → X (succ n))
-tail' α n = α (succ n)
+ℕComp : ∀ n → (p : ℕ → 𝔹) → ∃ (λ x₀ → p x₀ ≡ tt) → (p (ℰℕ n p)) ≡ tt
+ℕComp zero p (zero ⇒ x) = x
+ℕComp zero p (succ w ⇒ x) = ⋆⟪TODO⟫⋆ -- This case is absurd; perhaps will be fixed with subsets
+ℕComp (succ n) p w = ∨-elim (𝔹LEM (p n)) (case tt) (case ff) where
+  x₀ : ℕ
+  x₀ = if (p n) then n else (ℰℕ n p)
+  lem : {b : 𝔹} → (p n ≡ b) → p (if b then n else ℰℕ n p) ≡ tt → p x₀ ≡ tt
+  lem pr₁ pr₂ = trans≡ (cong≡ (λ ■ → p ■) (cong≡ (λ ■ → if ■ then n else (ℰℕ n p)) pr₁)) pr₂
+  case : (b : 𝔹) → (p n ≡ b) → p x₀ ≡ tt
+  case tt pr = lem pr pr
+  case ff pr = lem pr (ℕComp n p w)
 
--- ℕisCompact : (n : ℕ) → CompactSpace (ℰℕ n)
--- CompactSpace.def2 (ℕisCompact n) p (w ⇒ x) = {!!} where 
---  x₀ : 𝔹
---  x₀ = p w
---  pr : ∀ n → (ℰℕ n p) ≡ w
---  pr zero = {!!}
---  pr (succ n) = {!!}
+postulate ℕisCompact : ∀ n → CompactSpace (ℰℕ n)
 
 ℰ𝔹 : ℰ 𝔹
 ℰ𝔹 p = if (p tt) then (tt) else (ff)
