@@ -87,5 +87,6 @@ supNormℕ : ℕ → (ℕ → ℕ) → ℕ
 supNormℕ size f = (ℰℕ size) (λ n → forevery (ℰℕ size) (λ n' → maxℕ (f n) (f n') =ℕ f n))
 
 Φℕ→ℕ : ℕ → (ℕ → ℕ) → (ℕ → ℕ) → ℝ
-Φℕ→ℕ size f g = Φℕ (supNormℕ size f) (supNormℕ size g)
+Φℕ→ℕ zero f g = π₁ (Φℕ (f zero) (g zero)) , ℂ₀
+Φℕ→ℕ (succ n) f g = (π₁ (Φℕ (f n) (g n)) +ℕ π₁ (Φℕ→ℕ n f g)) , ℂ₀
 
