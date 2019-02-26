@@ -54,7 +54,7 @@ n −ℕ zero = n
 maxℕ : ℕ → ℕ → ℕ
 maxℕ zero m = m
 maxℕ n zero = n
-maxℕ (succ n) (succ m) = maxℕ n m
+maxℕ (succ n) (succ m) = succ (maxℕ n m)
 
 data List (A : Set) : Set where
   [] : List A

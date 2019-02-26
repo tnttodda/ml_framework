@@ -70,20 +70,22 @@ LossSpace.sym 𝕓isLoss ₁ ₁ = refl
 
 postulate ℂisLoss : LossSpace Φℂ
 
-isNormAt : (ℂ → ℂ) → ℂ → ℕ → 𝔹
-isNormAt f c n = forevery ℰℂ (λ c' → maxℂ (f c) (f c') n =𝕓 (f c) n)
+isNormAtℂ : (ℂ → ℂ) → ℂ → ℕ → 𝔹
+isNormAtℂ f c n = forevery ℰℂ (λ c' → maxℂ (f c) (f c') n =𝕓 (f c) n)
 
-isNorm : (ℂ → ℂ) → ℂ → ℕ → 𝔹
-isNorm f c zero = isNormAt f c zero
-isNorm f c (succ e) = isNormAt f c (succ e) && isNorm f c e 
+isNormℂ : (ℂ → ℂ) → ℂ → ℕ → 𝔹
+isNormℂ f c zero = isNormAtℂ f c zero
+isNormℂ f c (succ e) = isNormAtℂ f c (succ e) && isNormℂ f c e 
 
-supNorm : (ℂ → ℂ) → ℕ → ℂ
-supNorm f e n = ℰℂ (λ c → isNorm f c e) n
+supNormℂ : (ℂ → ℂ) → ℕ → ℂ
+supNormℂ f e n = ℰℂ (λ c → isNormℂ f c e) n
 
 Φℂ→ℂ : ℕ → (ℂ → ℂ) → (ℂ → ℂ) → ℝ
-Φℂ→ℂ n f g = zero , maxℂ (supNorm f n) (supNorm g n)
+Φℂ→ℂ n f g = Φℂ (supNormℂ f n) (supNormℂ g n)
+
+supNormℕ : ℕ → (ℕ → ℕ) → ℕ
+supNormℕ size f = (ℰℕ size) (λ n → forevery (ℰℕ size) (λ n' → maxℕ (f n) (f n') =ℕ f n))
 
 Φℕ→ℕ : ℕ → (ℕ → ℕ) → (ℕ → ℕ) → ℝ
-Φℕ→ℕ zero f g = (f zero −ℕ g zero) , ℂ₀
-Φℕ→ℕ (succ n) f g = ((f n −ℕ g n) +ℕ π₁ (Φℕ→ℕ n f g)) , ℂ₀
+Φℕ→ℕ size f g = Φℕ (supNormℕ size f) (supNormℕ size g)
 
