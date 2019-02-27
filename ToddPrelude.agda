@@ -1,3 +1,6 @@
+open import Agda.Primitive
+ using (Level; _⊔_; lzero; lsuc)
+
 postulate ⋆⟪TODO⟫⋆ : {A : Set} → A
 
 data 𝔹 : Set where
@@ -117,3 +120,4 @@ a ⊕ b = ((a ≡ tt) ∧ (b ≡ ff)) ∨ ((a ≡ ff) ∧ (b ≡ tt))
 data ∃ {X : Set} (P : X → Set) : Set where
   _⇒_ : (w : X) → P w → ∃ (λ x → P x)
 
+postulate FunExt : {A : Set} {B : A → Set} {f g : (x : A) → B x} → (∀ x → f x ≡ g x) → f ≡ g

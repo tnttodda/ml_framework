@@ -68,7 +68,31 @@ LossSpace.sym 𝕓isLoss ₁ ₁ = refl
 Φℂ : ℂ → ℂ → ℝ
 Φℂ a b = 0 , λ n → φ𝕓 (a n) (b n)
 
-postulate ℂisLoss : LossSpace Φℂ
+𝕓LEM : (b : 𝕓) → (b ≡ ₁) ∨ (b ≡ ₀)
+𝕓LEM ₁ = inl refl
+𝕓LEM ₀ = inr refl
+
+ℂisLoss : LossSpace Φℂ
+LossSpace.pos ℂisLoss y₁ y₂ zero = {!!} where
+  lem2 : (c : ℂ) → c zero ≡ ₁ → ((ℂ₀ <ℂ c) zero) ≡ tt
+  lem2 c x = {!!}
+  lem'' : {c c' : ℂ} → (b b' : 𝕓) → (head c ≡ b) → (head c' ≡ b') → ((c' =ℂ c) zero) ≡ (b' =𝕓 b)
+  lem'' ₀ ₀ x x₁ = {!!}
+  lem'' ₀ ₁ x x₁ = {!!}
+  lem'' ₁ ₀ x x₁ = {!!}
+  lem'' ₁ ₁ x x₁ = {!!}
+  lem' : (c c' : ℂ) → ((c' =ℂ c) zero) ≡ ((head c') =𝕓 (head c))
+  lem' c c' = refl
+  lem : (c : ℂ) → c zero ≡ ₀ → ((ℂ₀ =ℂ c) zero) ≡ tt
+  lem c x = {!!}
+LossSpace.pos ℂisLoss y₁ y₂ (succ ε) = {!!} 
+LossSpace.ref ℂisLoss y₁ = cong≡ (λ ■ → 0 , ■) (FunExt lem) where
+  𝕓ref : ∀ b → (φ𝕓 b b) ≡ ₀ 
+  𝕓ref ₀ = refl
+  𝕓ref ₁ = refl
+  lem : ∀ k → (λ n → φ𝕓 (y₁ n) (y₁ n)) k ≡ ℂ₀ k
+  lem k = trans≡ (𝕓ref (y₁ k)) (sym≡ (𝕓ref (ℂ₀ k)))
+LossSpace.sym ℂisLoss = {!!}
 
 isNormAtℂ : (ℂ → ℂ) → ℂ → ℕ → 𝔹
 isNormAtℂ f c n = forevery ℰℂ (λ c' → maxℂ (f c) (f c') n =𝕓 (f c) n)
@@ -86,7 +110,9 @@ supNormℂ f e n = ℰℂ (λ c → isNormℂ f c e) n
 supNormℕ : ℕ → (ℕ → ℕ) → ℕ
 supNormℕ size f = (ℰℕ size) (λ n → forevery (ℰℕ size) (λ n' → maxℕ (f n) (f n') =ℕ f n))
 
-Φℕ→ℕ : ℕ → (ℕ → ℕ) → (ℕ → ℕ) → ℝ
-Φℕ→ℕ zero f g = π₁ (Φℕ (f zero) (g zero)) , ℂ₀
-Φℕ→ℕ (succ n) f g = (π₁ (Φℕ (f n) (g n)) +ℕ π₁ (Φℕ→ℕ n f g)) , ℂ₀
+Φℕ→ℕ' : ℕ → (ℕ → ℕ) → (ℕ → ℕ) → ℝ
+Φℕ→ℕ' zero f g = π₁ (Φℕ (f zero) (g zero)) , ℂ₀
+Φℕ→ℕ' (succ n) f g = (π₁ (Φℕ (f n) (g n)) +ℕ π₁ (Φℕ→ℕ' n f g)) , ℂ₀
 
+Φℕ→ℕ : ℕ → (ℕ → ℕ) → (ℕ → ℕ) → ℝ
+Φℕ→ℕ n = Φℕ→ℕ' (div n 3)

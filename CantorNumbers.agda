@@ -26,11 +26,25 @@ _<ℂ_ : ℂ → ℂ → ℕ → 𝔹
   next (succ n) = ((tail a) <ℂ (tail b)) n
 
 _=ℂ_ : ℂ → ℂ → ℕ → 𝔹
-(a =ℂ b) n = if (head a) =𝕓 (head b) then (next n) else ff where
-  next : ℕ → 𝔹
-  next zero = tt
-  next (succ n) = ((tail a) =ℂ (tail b)) n
+(a =ℂ b) zero = (head a) =𝕓 (head b)
+(a =ℂ b) (succ n) = if (head a) =𝕓 (head b) then ((tail a) =ℂ (tail b)) n else ff
 
 maxℂ : ℂ → ℂ → ℂ
 maxℂ a b = λ n → if (a >ℂ b) n then a n else b n
 
+postulate Float : Set
+{-# BUILTIN FLOAT Float #-}
+
+primitive
+  primFloatMinus             : Float → Float → Float
+  primFloatTimes             : Float → Float → Float
+  primFloatNumericalEquality : Float → Float → 𝔹
+  primFloatNumericalLess : Float → Float → 𝔹
+  primFloatNegate            : Float → Float
+
+_≤Float_ : Float → Float → 𝔹
+f ≤Float f' = primFloatNumericalEquality f f' ∣∣ primFloatNumericalLess f f'
+
+binaryFloat : ℕ → Float
+binaryFloat zero = 0.5
+binaryFloat (succ n) = primFloatTimes (binaryFloat n) 0.5
