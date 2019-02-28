@@ -53,29 +53,63 @@ forevery s p = ! forsome s (λ x → ! p x)
 _≤_ : ℕ → ℕ → Set
 k ≤ n = ∃ (λ e → (e +ℕ k) ≡ n)
 
-ℰℕ' : ∀ n k → k ≤ n → ℰ (k ≤ n)
-ℰℕ' zero zero x p = zero ⇒ refl
-ℰℕ' zero (succ k) (zero ⇒ ()) p
-ℰℕ' zero (succ k) (succ e ⇒ ()) p
-ℰℕ' (succ n) zero x p = succ n ⇒ cong≡ (λ ■ → succ ■) (pr n) where
-  pr : ∀ n → (n +ℕ zero) ≡ n
-  pr zero = refl
-  pr (succ n) = cong≡ (λ ■ → succ ■) (pr n)
-ℰℕ' (succ n) (succ k) x p = if p (n ⇒ {!!}) then {!!} else {!!}
+con : ∀ k → k ≤ zero → (k ≤ℕ zero) ≡ tt
+con zero (w ⇒ x) = refl
+con (succ k) (zero ⇒ ())
+con (succ k) (succ w ⇒ ())
+
+postulate fact4 : ∀ k n → succ k ≤ succ n → k ≤ n
+postulate fact4' : ∀ k n → (succ k ≤ℕ succ n) ≡ tt → (k ≤ℕ n) ≡ tt
+
+con2 : ∀ k n → k ≤ n → (k ≤ℕ n) ≡ tt
+con2 k zero x = con k x 
+con2 zero (succ n) x = refl
+con2 (succ k) (succ .k) (zero ⇒ refl) = fact k k (fact2 k) where
+  fact2 : ∀ a → (a =ℕ a) ≡ tt
+  fact2 zero = refl
+  fact2 (succ a) = fact2 a
+  fact : ∀ a b → (a =ℕ b) ≡ tt → (a ≤ℕ b) ≡ tt
+  fact zero zero x = refl
+  fact zero (succ b) ()
+  fact (succ a) (succ b) x = fact a b x
+  fact (succ a) zero ()
+con2 (succ k) (succ n) x = con2 k n (fact4 k n x)
+
+ℕₙ' : ∀ n k → (k ≤ℕ n) ≡ tt → ℕ
+ℕₙ' zero zero refl = zero
+ℕₙ' zero (succ k) ()
+ℕₙ' (succ n) zero x = zero
+ℕₙ' (succ n) (succ k) x = succ (ℕₙ' n k (fact4' k n x))
+
+ℕₙ : ∀ n → ∃ (λ k → k ≤ n) → ℕ
+ℕₙ n (k ⇒ x) = ℕₙ' n k (con2 k n x)
+
+ℰℕₙ : ∀ k n → ℰ (k ≤ n)
+ℰℕₙ zero n x = {!!}
+ℰℕₙ (succ k) n x = {!!}
 
 postulate ℕSub : ∀ n → (p : ℕ → 𝔹) → ∃ (λ x₀ → p x₀ ≡ tt) → ((ℰℕ n p) <ℕ n) ≡ tt
 
-ℕComp : ∀ n → (p : ℕ → 𝔹) → ∃ (λ x₀ → p x₀ ≡ tt ) → (p (ℰℕ n p)) ≡ tt
-ℕComp zero p (zero ⇒ x) = x
-ℕComp zero p (succ w ⇒ x) = {!!}
-ℕComp (succ n) p w = ∨-elim (𝔹LEM (p n)) (case tt) (case ff) where
+ℕComp : ∀ n → (p : ℕ → 𝔹) → ∃ (λ x₀ → p x₀ ≡ tt ) → ((ℰℕ n p) <ℕ n) ≡ tt → (p (ℰℕ n p)) ≡ tt
+ℕComp zero p (zero ⇒ x) _ = x
+ℕComp zero p (succ w ⇒ x) ()
+ℕComp (succ n) p (zero ⇒ x) y = ∨-elim (𝔹LEM (p n)) (case tt) (case ff) where
   x₀ : ℕ
   x₀ = if (p n) then n else (ℰℕ n p)
   lem5 : {b : 𝔹} → (p n ≡ b) → p (if b then n else ℰℕ n p) ≡ tt → p x₀ ≡ tt
   lem5 pr₁ pr₂ = trans≡ (cong≡ (λ ■ → p ■) (cong≡ (λ ■ → if ■ then n else (ℰℕ n p)) pr₁)) pr₂
   case : (b : 𝔹) → (p n ≡ b) → p x₀ ≡ tt
   case tt pr = lem5 pr pr
-  case ff pr = lem5 pr (ℕComp n p w)
+  case ff pr = lem5 pr (ℕComp n p (zero ⇒ x) {!!})
+ℕComp (succ n) p (succ w ⇒ x) y = {!!}
+-- ℕComp (succ n) p w y = ∨-elim (𝔹LEM (p n)) (case tt) (case ff) where
+--  x₀ : ℕ
+--  x₀ = if (p n) then n else (ℰℕ n p)
+--  lem5 : {b : 𝔹} → (p n ≡ b) → p (if b then n else ℰℕ n p) ≡ tt → p x₀ ≡ tt
+--  lem5 pr₁ pr₂ = trans≡ (cong≡ (λ ■ → p ■) (cong≡ (λ ■ → if ■ then n else (ℰℕ n p)) pr₁)) pr₂
+--  case : (b : 𝔹) → (p n ≡ b) → p x₀ ≡ tt
+--  case tt pr = lem5 pr pr
+--  case ff pr = lem5 pr (ℕComp n p w {!!})
 
 ℰ𝔹 : ℰ 𝔹
 ℰ𝔹 p = if (p tt) then (tt) else (ff)
