@@ -9,6 +9,11 @@ data 𝔹 : Set where
 {-# BUILTIN TRUE  tt  #-}
 {-# BUILTIN FALSE ff #-}
 
+_=𝔹_ : 𝔹 → 𝔹 → 𝔹
+tt =𝔹 tt = tt
+ff =𝔹 ff = tt
+_ =𝔹 _ = ff
+
 if_then_else_ : {A : Set} → 𝔹 → A → A → A
 if tt then t else f = t
 if ff then t else f = f
@@ -121,3 +126,7 @@ data ∃ {X : Set} (P : X → Set) : Set where
   _⇒_ : (w : X) → P w → ∃ (λ x → P x)
 
 postulate FunExt : {A : Set} {B : A → Set} {f g : (x : A) → B x} → (∀ x → f x ≡ g x) → f ≡ g
+
+EFQ : {A : Set} → ∀ {a} → a ≡ tt → a ≡ ff → A
+EFQ {A} {ff} () x₁
+EFQ {A} {tt} x ()

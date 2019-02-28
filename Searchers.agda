@@ -8,11 +8,7 @@ open import RealNumbers
 record Searchable (D : Set) : Set where -- K ⊆ D
   field
     ε : ℰ D
-    -- def1 : (p : D → 𝔹) → {!!} -- Σ p ∈ K
-    def2 : (p : D → 𝔹) → (x : D) → p x ≡ tt → (p (ε p)) ≡ tt -- x₀ ∈ K
-
-E : ℰ (ℕ → Set)
-E = ?
+    def2 : (p : D → 𝔹) → (x : D) → p x ≡ tt → (p (ε p)) ≡ tt
 
 data 𝟙 : Set where
   ⋆ : 𝟙
@@ -21,50 +17,27 @@ data 𝟙 : Set where
 Searchable.ε 𝟙Searchable p = ⋆
 Searchable.def2 𝟙Searchable p ⋆ pr = pr
 
+∨Searchable : {A B : Set} → Searchable A → Searchable B → Searchable (A ∨ B)
 Aside : {A B : Set} → Searchable A → Searchable B → (p : (A ∨ B) → 𝔹) → A ∨ B
 Aside ℰA ℰB p = inl (Searchable.ε ℰA (λ a → p (inl a)))
 Bside : {A B : Set} → Searchable A → Searchable B → (p : (A ∨ B) → 𝔹) → A ∨ B
 Bside ℰA ℰB p = inr (Searchable.ε ℰB (λ b → p (inr b)))
-lem : {A B : Set} → Searchable A → Searchable B → (p : (A ∨ B) → 𝔹) → 𝔹 → A ∨ B
-lem ℰA ℰB p tt = Aside ℰA ℰB p
-lem ℰA ℰB p ff = Bside ℰA ℰB p
-
-∨Searchable : {A B : Set} → Searchable A → Searchable B → Searchable (A ∨ B)
-Searchable.ε (∨Searchable {A} {B} ℰA ℰB) p = lem ℰA ℰB p (p (Aside ℰA ℰB p))
-Searchable.def2 (∨Searchable ℰA ℰB) p (inl a) pr = {!!} where -- prove (p (inl (Searchable.ε ℰA (λ a → p (inl a))))) refl where
-  prove : (b : 𝔹) → p (Aside ℰA ℰB p) ≡ b
-           → p (lem ℰA ℰB p (p (Aside ℰA ℰB p))) ≡ tt
-  prove tt pr = trans≡ (sub pr) sub2 where
-    sub2 : p (lem ℰA ℰB p tt) ≡ tt
-    sub2 = pr
-    sub : (p (lem ℰA ℰB p tt)) ≡ tt → (p (lem ℰA ℰB p (p (Aside ℰA ℰB p))) ≡ p (lem ℰA ℰB p tt)) 
-    sub pr₂ = cong≡ (λ ■ → p (lem ℰA ℰB p ■)) pr₂
-  prove ff pr = trans≡ (sub {!!}) sub2 where
-    sub2 : p (lem ℰA ℰB p ff) ≡ tt
-    sub2 = {!!}
-    sub : (p (lem ℰA ℰB p ff)) ≡ tt → (p (lem ℰA ℰB p (p (Aside ℰA ℰB p))) ≡ p (lem ℰA ℰB p ff)) 
-    sub pr₂ = {!!} -- cong≡ (λ ■ → p (lem ℰA ℰB p ■)) pr₂
-Searchable.def2 (∨Searchable ℰA ℰB) p (inr b) pr = {!!}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+A∨B : {A B : Set} → Searchable A → Searchable B → (p : (A ∨ B) → 𝔹) → 𝔹 → A ∨ B
+A∨B ℰA ℰB p tt = Aside ℰA ℰB p
+A∨B ℰA ℰB p ff = Bside ℰA ℰB p
+Searchable.ε (∨Searchable {A} {B} ℰA ℰB) p = A∨B ℰA ℰB p (p (Aside ℰA ℰB p))
+Searchable.def2 (∨Searchable ℰA ℰB) p (inl a) pr = prove (p (Aside ℰA ℰB p)) refl where
+  prove : (b : 𝔹) → p (Aside ℰA ℰB p) ≡ b → p (A∨B ℰA ℰB p (p (Aside ℰA ℰB p))) ≡ tt
+  prove tt pr₁ = trans≡ sub pr₁ where
+    sub : (p (A∨B ℰA ℰB p (p (Aside ℰA ℰB p))) ≡ p (A∨B ℰA ℰB p tt)) 
+    sub = cong≡ (λ ■ → p (A∨B ℰA ℰB p ■)) pr₁
+  prove ff pr₁ = EFQ (Searchable.def2 ℰA (λ a → p (inl a)) a pr) pr₁
+Searchable.def2 (∨Searchable ℰA ℰB) p (inr b) pr = prove (p (Aside ℰA ℰB p)) refl where
+  prove : (b : 𝔹) → p (Aside ℰA ℰB p) ≡ b → p (A∨B ℰA ℰB p (p (Aside ℰA ℰB p))) ≡ tt
+  prove ff pr₁ = trans≡ sub (Searchable.def2 ℰB (λ b → p (inr b)) b pr) where
+    sub : (p (A∨B ℰA ℰB p (p (Aside ℰA ℰB p))) ≡ p (A∨B ℰA ℰB p ff)) 
+    sub = cong≡ (λ ■ → p (A∨B ℰA ℰB p ■)) pr₁
+  prove tt pr₁ = trans≡ (cong≡ (λ ■ → p (A∨B ℰA ℰB p ■)) pr₁) pr₁
 
 Π : (d : Set) → Set
 Π d = (d → 𝔹) → 𝔹
@@ -76,6 +49,19 @@ forevery s p = ! forsome s (λ x → ! p x)
 ℰℕ : ℕ → ℰ ℕ
 ℰℕ zero p = zero
 ℰℕ (succ n) p = if (p n) then (n) else (ℰℕ n p)
+
+_≤_ : ℕ → ℕ → Set
+k ≤ n = ∃ (λ e → (e +ℕ k) ≡ n)
+
+ℰℕ' : ∀ n k → k ≤ n → ℰ (k ≤ n)
+ℰℕ' zero zero x p = zero ⇒ refl
+ℰℕ' zero (succ k) (zero ⇒ ()) p
+ℰℕ' zero (succ k) (succ e ⇒ ()) p
+ℰℕ' (succ n) zero x p = succ n ⇒ cong≡ (λ ■ → succ ■) (pr n) where
+  pr : ∀ n → (n +ℕ zero) ≡ n
+  pr zero = refl
+  pr (succ n) = cong≡ (λ ■ → succ ■) (pr n)
+ℰℕ' (succ n) (succ k) x p = if p (n ⇒ {!!}) then {!!} else {!!}
 
 postulate ℕSub : ∀ n → (p : ℕ → 𝔹) → ∃ (λ x₀ → p x₀ ≡ tt) → ((ℰℕ n p) <ℕ n) ≡ tt
 
