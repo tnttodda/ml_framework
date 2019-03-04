@@ -5,6 +5,10 @@ open import RealNumbers
 ℰ : Set → Set
 ℰ d = (d → 𝔹) → d
 
+record CompactSpace {D : Set} (Σ : (D → 𝔹) → D) : Set where
+  field
+    def2 : (p : D → 𝔹) → ∃ (λ x₀ → p x₀ ≡ tt) → p (Σ p) ≡ tt
+
 record Searchable (D : Set) : Set where -- K ⊆ D
   field
     ε : ℰ D
@@ -50,6 +54,8 @@ forevery s p = ! forsome s (λ x → ! p x)
 ℰℕ zero p = zero
 ℰℕ (succ n) p = if (p n) then (n) else (ℰℕ n p)
 
+-- A mess below here; trying to formulate all subsets of ℕ are searchable
+
 _≤_ : ℕ → ℕ → Set
 k ≤ n = ∃ (λ e → (e +ℕ k) ≡ n)
 
@@ -85,8 +91,7 @@ con2 (succ k) (succ n) x = con2 k n (fact4 k n x)
 ℕₙ n (k ⇒ x) = ℕₙ' n k (con2 k n x)
 
 ℰℕₙ : ∀ k n → ℰ (k ≤ n)
-ℰℕₙ zero n x = {!!}
-ℰℕₙ (succ k) n x = {!!}
+ℰℕₙ = ⋆⟪TODO⟫⋆
 
 postulate ℕSub : ∀ n → (p : ℕ → 𝔹) → ∃ (λ x₀ → p x₀ ≡ tt) → ((ℰℕ n p) <ℕ n) ≡ tt
 
@@ -100,8 +105,8 @@ postulate ℕSub : ∀ n → (p : ℕ → 𝔹) → ∃ (λ x₀ → p x₀ ≡ 
   lem5 pr₁ pr₂ = trans≡ (cong≡ (λ ■ → p ■) (cong≡ (λ ■ → if ■ then n else (ℰℕ n p)) pr₁)) pr₂
   case : (b : 𝔹) → (p n ≡ b) → p x₀ ≡ tt
   case tt pr = lem5 pr pr
-  case ff pr = lem5 pr (ℕComp n p (zero ⇒ x) {!!})
-ℕComp (succ n) p (succ w ⇒ x) y = {!!}
+  case ff pr = lem5 pr (ℕComp n p (zero ⇒ x)  ⋆⟪TODO⟫⋆)
+ℕComp (succ n) p (succ w ⇒ x) y =  ⋆⟪TODO⟫⋆
 -- ℕComp (succ n) p w y = ∨-elim (𝔹LEM (p n)) (case tt) (case ff) where
 --  x₀ : ℕ
 --  x₀ = if (p n) then n else (ℰℕ n p)
@@ -110,6 +115,7 @@ postulate ℕSub : ∀ n → (p : ℕ → 𝔹) → ∃ (λ x₀ → p x₀ ≡ 
 --  case : (b : 𝔹) → (p n ≡ b) → p x₀ ≡ tt
 --  case tt pr = lem5 pr pr
 --  case ff pr = lem5 pr (ℕComp n p w {!!})
+--
 
 ℰ𝔹 : ℰ 𝔹
 ℰ𝔹 p = if (p tt) then (tt) else (ff)
