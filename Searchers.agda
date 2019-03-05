@@ -21,6 +21,15 @@ data 𝟙 : Set where
 Searchable.ε 𝟙Searchable p = ⋆
 Searchable.def2 𝟙Searchable p ⋆ pr = pr
 
+𝔹Searchable : Searchable 𝔹
+Searchable.ε 𝔹Searchable p = if (p tt) then (tt) else (ff)
+Searchable.def2 𝔹Searchable p ff pr = ∨-elim (𝔹LEM (p tt)) left-side right-side where
+  left-side : p tt ≡ tt → p (if p tt then tt else ff) ≡ tt
+  left-side t = trans≡ (cong≡ (λ ■ → p ■) (cong≡ (λ ■ → if ■ then tt else ff) t)) t
+  right-side : p tt ≡ ff → p (if p tt then tt else ff) ≡ tt
+  right-side f = trans≡ (cong≡ (λ ■ → p ■) (cong≡ (λ ■ → if ■ then tt else ff) f)) pr
+Searchable.def2 𝔹Searchable p tt pr = trans≡ (cong≡ (λ ■ → p ■) (cong≡ (λ ■ → if ■ then tt else ff) pr)) pr
+
 ∨Searchable : {A B : Set} → Searchable A → Searchable B → Searchable (A ∨ B)
 Aside : {A B : Set} → Searchable A → Searchable B → (p : (A ∨ B) → 𝔹) → A ∨ B
 Aside ℰA ℰB p = inl (Searchable.ε ℰA (λ a → p (inl a)))
@@ -54,68 +63,21 @@ forevery s p = ! forsome s (λ x → ! p x)
 ℰℕ zero p = zero
 ℰℕ (succ n) p = if (p n) then (n) else (ℰℕ n p)
 
--- A mess below here; trying to formulate all subsets of ℕ are searchable
+ℕComp : ∀ n → (p : ℕ → 𝔹) → (x₀ : ℕ) → (p x₀ ≡ tt) →
+               ((x₀ ≡ zero) ∨ ((x₀ <ℕ n) ≡ tt)) → (p (ℰℕ n p)) ≡ tt
+ℕComp zero p zero pr lt = pr
+ℕComp zero p (succ x₀) pr (inl ())
+ℕComp zero p (succ x₀) pr (inr ())
+ℕComp (succ n) p zero pr (inl refl) = {!!}
+ℕComp (succ n) p zero pr (inr refl) = {!!}
+ℕComp (succ n) p (succ x₀) pr (inl ())
+ℕComp (succ n) p (succ x₀) pr (inr x) = {!!}
 
-_≤_ : ℕ → ℕ → Set
-k ≤ n = ∃ (λ e → (e +ℕ k) ≡ n)
-
-con : ∀ k → k ≤ zero → (k ≤ℕ zero) ≡ tt
-con zero (w ⇒ x) = refl
-con (succ k) (zero ⇒ ())
-con (succ k) (succ w ⇒ ())
-
-postulate fact4 : ∀ k n → succ k ≤ succ n → k ≤ n
-postulate fact4' : ∀ k n → (succ k ≤ℕ succ n) ≡ tt → (k ≤ℕ n) ≡ tt
-
-con2 : ∀ k n → k ≤ n → (k ≤ℕ n) ≡ tt
-con2 k zero x = con k x 
-con2 zero (succ n) x = refl
-con2 (succ k) (succ .k) (zero ⇒ refl) = fact k k (fact2 k) where
-  fact2 : ∀ a → (a =ℕ a) ≡ tt
-  fact2 zero = refl
-  fact2 (succ a) = fact2 a
-  fact : ∀ a b → (a =ℕ b) ≡ tt → (a ≤ℕ b) ≡ tt
-  fact zero zero x = refl
-  fact zero (succ b) ()
-  fact (succ a) (succ b) x = fact a b x
-  fact (succ a) zero ()
-con2 (succ k) (succ n) x = con2 k n (fact4 k n x)
-
-ℕₙ' : ∀ n k → (k ≤ℕ n) ≡ tt → ℕ
-ℕₙ' zero zero refl = zero
-ℕₙ' zero (succ k) ()
-ℕₙ' (succ n) zero x = zero
-ℕₙ' (succ n) (succ k) x = succ (ℕₙ' n k (fact4' k n x))
-
-ℕₙ : ∀ n → ∃ (λ k → k ≤ n) → ℕ
-ℕₙ n (k ⇒ x) = ℕₙ' n k (con2 k n x)
-
-ℰℕₙ : ∀ k n → ℰ (k ≤ n)
-ℰℕₙ = ⋆⟪TODO⟫⋆
-
-postulate ℕSub : ∀ n → (p : ℕ → 𝔹) → ∃ (λ x₀ → p x₀ ≡ tt) → ((ℰℕ n p) <ℕ n) ≡ tt
-
-ℕComp : ∀ n → (p : ℕ → 𝔹) → ∃ (λ x₀ → p x₀ ≡ tt ) → ((ℰℕ n p) <ℕ n) ≡ tt → (p (ℰℕ n p)) ≡ tt
-ℕComp zero p (zero ⇒ x) _ = x
-ℕComp zero p (succ w ⇒ x) ()
-ℕComp (succ n) p (zero ⇒ x) y = ∨-elim (𝔹LEM (p n)) (case tt) (case ff) where
-  x₀ : ℕ
-  x₀ = if (p n) then n else (ℰℕ n p)
-  lem5 : {b : 𝔹} → (p n ≡ b) → p (if b then n else ℰℕ n p) ≡ tt → p x₀ ≡ tt
-  lem5 pr₁ pr₂ = trans≡ (cong≡ (λ ■ → p ■) (cong≡ (λ ■ → if ■ then n else (ℰℕ n p)) pr₁)) pr₂
-  case : (b : 𝔹) → (p n ≡ b) → p x₀ ≡ tt
-  case tt pr = lem5 pr pr
-  case ff pr = lem5 pr (ℕComp n p (zero ⇒ x)  ⋆⟪TODO⟫⋆)
-ℕComp (succ n) p (succ w ⇒ x) y =  ⋆⟪TODO⟫⋆
--- ℕComp (succ n) p w y = ∨-elim (𝔹LEM (p n)) (case tt) (case ff) where
---  x₀ : ℕ
---  x₀ = if (p n) then n else (ℰℕ n p)
---  lem5 : {b : 𝔹} → (p n ≡ b) → p (if b then n else ℰℕ n p) ≡ tt → p x₀ ≡ tt
---  lem5 pr₁ pr₂ = trans≡ (cong≡ (λ ■ → p ■) (cong≡ (λ ■ → if ■ then n else (ℰℕ n p)) pr₁)) pr₂
---  case : (b : 𝔹) → (p n ≡ b) → p x₀ ≡ tt
---  case tt pr = lem5 pr pr
---  case ff pr = lem5 pr (ℕComp n p w {!!})
---
+-- where
+--  left : p n ≡ tt → p (if p n then n else ℰℕ n p) ≡ tt
+--  left x = trans≡ (cong≡ (λ ■ → p ■) (cong≡ (λ ■ → if ■ then n else ℰℕ n p) x)) x
+--  right : p n ≡ ff → p (if p n then n else ℰℕ n p) ≡ tt
+-- right x = trans≡ (cong≡ (λ ■ → p ■) (cong≡ (λ ■ → if ■ then n else ℰℕ n p) x)) {!!}
 
 ℰ𝔹 : ℰ 𝔹
 ℰ𝔹 p = if (p tt) then (tt) else (ff)
@@ -142,13 +104,3 @@ postulate ℕSub : ∀ n → (p : ℕ → 𝔹) → ∃ (λ x₀ → p x₀ ≡ 
 
 ℰℝ : ℕ → ℰ ℝ
 ℰℝ n = ℰ× (ℰℕ n) ℰℂ
-
-div-helper : ℕ → ℕ → ℕ → ℕ → ℕ
-div-helper k m  zero    j      = k
-div-helper k m (succ n)  zero   = div-helper (succ k) m n m
-div-helper k m (succ n) (succ j) = div-helper k m n j
-
-div : ℕ → ℕ → ℕ 
-div n zero = zero
-div zero (succ m) = zero
-div n (succ m) = div-helper 0 m n m 
