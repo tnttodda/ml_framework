@@ -61,23 +61,39 @@ forevery s p = ! forsome s (λ x → ! p x)
 
 ℰℕ : ℕ → ℰ ℕ
 ℰℕ zero p = zero
-ℰℕ (succ n) p = if (p n) then (n) else (ℰℕ n p)
+ℰℕ (succ n) p = if (p (succ n)) then (succ n) else (ℰℕ n p)
 
-ℕComp : ∀ n → (p : ℕ → 𝔹) → (x₀ : ℕ) → (p x₀ ≡ tt) →
-               ((x₀ ≡ zero) ∨ ((x₀ <ℕ n) ≡ tt)) → (p (ℰℕ n p)) ≡ tt
+ℕComp : ∀ n → (p : ℕ → 𝔹) → (x₀ : ℕ) → (p x₀ ≡ tt) → ((x₀ ≤ℕ n) ≡ tt) → (p (ℰℕ n p)) ≡ tt
 ℕComp zero p zero pr lt = pr
-ℕComp zero p (succ x₀) pr (inl ())
-ℕComp zero p (succ x₀) pr (inr ())
-ℕComp (succ n) p zero pr (inl refl) = {!!}
-ℕComp (succ n) p zero pr (inr refl) = {!!}
-ℕComp (succ n) p (succ x₀) pr (inl ())
-ℕComp (succ n) p (succ x₀) pr (inr x) = {!!}
-
--- where
---  left : p n ≡ tt → p (if p n then n else ℰℕ n p) ≡ tt
---  left x = trans≡ (cong≡ (λ ■ → p ■) (cong≡ (λ ■ → if ■ then n else ℰℕ n p) x)) x
---  right : p n ≡ ff → p (if p n then n else ℰℕ n p) ≡ tt
--- right x = trans≡ (cong≡ (λ ■ → p ■) (cong≡ (λ ■ → if ■ then n else ℰℕ n p) x)) {!!}
+ℕComp zero p (succ x₀) pr ()
+ℕComp (succ n) p x₀ pr lt = ∨-elim (𝔹LEM (p (succ n))) left right where
+  left : p (succ n) ≡ tt → p (if p (succ n) then (succ n) else ℰℕ n p) ≡ tt
+  left x = trans≡ (cong≡ (λ ■ → p ■) (cong≡ (λ ■ → if ■ then (succ n) else ℰℕ n p) x)) x
+  right : p (succ n) ≡ ff → p (if p (succ n) then (succ n) else ℰℕ n p) ≡ tt
+  right x = trans≡ (cong≡ (λ ■ → p ■) (cong≡ (λ ■ → if ■ then (succ n) else ℰℕ n p) x)) (ℕComp n p x₀ pr (superlemma x₀ n (ultralemma x₀ (succ n) pr x) lt)) where
+    ultralemma : ∀ a b → p a ≡ tt → p b ≡ ff → (a =ℕ b) ≡ ff
+    ultralemma zero zero x₁ x₂ = EFQ x₁ x₂
+    ultralemma zero (succ b) x₁ x₂ = refl
+    ultralemma (succ a) zero x₁ x₂ = refl
+    ultralemma (succ a) (succ b) x₁ x₂ = ∨-elim (𝔹LEM (a =ℕ b)) (λ z → EFQ (contralemma a b (equalslemma a b z) x₁) x₂) (λ z → z) where
+      contralemma : ∀ a b → a ≡ b → p (succ a) ≡ tt → p (succ b) ≡ tt
+      contralemma zero zero x₃ x₄ = x₄
+      contralemma zero (succ _) () x₄
+      contralemma (succ _) zero () x₄
+      contralemma (succ a) (succ .a) refl x₄ = x₄
+      equalslemma : ∀ a b → (a =ℕ b) ≡ tt → a ≡ b
+      equalslemma zero zero x₃ = refl
+      equalslemma zero (succ _) ()
+      equalslemma (succ _) zero ()
+      equalslemma (succ a) (succ b) x₃ = cong≡ (λ ■ → succ ■) (equalslemma a b x₃)
+    superlemma : ∀ a b → (a =ℕ succ b) ≡ ff → (a ≤ℕ succ b) ≡ tt → (a ≤ℕ b) ≡ tt
+    superlemma zero zero x₁ x₂ = refl
+    superlemma zero (succ b) x₁ x₂ = refl
+    superlemma (succ a) zero x₁ x₂ = EFQ (minilemma a x₂) x₁ where
+      minilemma : ∀ a → (succ a ≤ℕ succ zero) ≡ tt → (a =ℕ zero) ≡ tt
+      minilemma zero _ = refl
+      minilemma (succ _) ()
+    superlemma (succ a) (succ b) x₁ x₂ = superlemma a b x₁ x₂
 
 ℰ𝔹 : ℰ 𝔹
 ℰ𝔹 p = if (p tt) then (tt) else (ff)
