@@ -70,17 +70,9 @@ forevery s p = ! forsome s (λ x → ! p x)
   left : p (succ n) ≡ tt → p (if p (succ n) then (succ n) else ℰℕ n p) ≡ tt
   left x = trans≡ (cong≡ (λ ■ → p ■) (cong≡ (λ ■ → if ■ then (succ n) else ℰℕ n p) x)) x
   right : p (succ n) ≡ ff → p (if p (succ n) then (succ n) else ℰℕ n p) ≡ tt
-  right x = trans≡ (cong≡ (λ ■ → p ■) (cong≡ (λ ■ → if ■ then (succ n) else ℰℕ n p) x)) (ℕComp n p x₀ pr (superlemma x₀ n (ultralemma x₀ (succ n) pr x) lt)) where
-    ultralemma : ∀ a b → p a ≡ tt → p b ≡ ff → (a =ℕ b) ≡ ff
-    ultralemma zero zero x₁ x₂ = EFQ x₁ x₂
-    ultralemma zero (succ b) x₁ x₂ = refl
-    ultralemma (succ a) zero x₁ x₂ = refl
-    ultralemma (succ a) (succ b) x₁ x₂ = ∨-elim (𝔹LEM (a =ℕ b)) (λ z → EFQ (contralemma a b (equalslemma a b z) x₁) x₂) (λ z → z) where
-      contralemma : ∀ a b → a ≡ b → p (succ a) ≡ tt → p (succ b) ≡ tt
-      contralemma zero zero x₃ x₄ = x₄
-      contralemma zero (succ _) () x₄
-      contralemma (succ _) zero () x₄
-      contralemma (succ a) (succ .a) refl x₄ = x₄
+  right x = trans≡ (cong≡ (λ ■ → p ■) (cong≡ (λ ■ → if ■ then (succ n) else ℰℕ n p) x)) (ℕComp n p x₀ pr (superlemma x₀ n (therefore x₀ (succ n) pr x) lt)) where
+    therefore : ∀ a b → p a ≡ tt → p b ≡ ff → (a =ℕ b) ≡ ff
+    therefore a b x₁ x₂ = ∨-elim (𝔹LEM (a =ℕ b)) (λ x₃ → EFQ (trans≡ (sym≡ (cong≡ p (equalslemma a b x₃))) x₁) x₂) (λ z → z) where
       equalslemma : ∀ a b → (a =ℕ b) ≡ tt → a ≡ b
       equalslemma zero zero x₃ = refl
       equalslemma zero (succ _) ()
