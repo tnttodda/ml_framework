@@ -63,6 +63,7 @@ forevery s p = ! forsome s (λ x → ! p x)
 ℰℕ zero p = zero
 ℰℕ (succ n) p = if (p (succ n)) then (succ n) else (ℰℕ n p)
 
+--             def2 : (p : D → 𝔹) → (x : D)  → p x ≡ tt                                 → (p (ε p)) ≡ tt
 ℕComp : ∀ n → (p : ℕ → 𝔹) → (x₀ : ℕ) → (p x₀ ≡ tt) → ((x₀ ≤ℕ n) ≡ tt) → (p (ℰℕ n p)) ≡ tt
 ℕComp zero p zero pr lt = pr
 ℕComp zero p (succ x₀) pr ()
@@ -70,25 +71,22 @@ forevery s p = ! forsome s (λ x → ! p x)
   left : p (succ n) ≡ tt → p (if p (succ n) then (succ n) else ℰℕ n p) ≡ tt
   left x = trans≡ (cong≡ (λ ■ → p ■) (cong≡ (λ ■ → if ■ then (succ n) else ℰℕ n p) x)) x
   right : p (succ n) ≡ ff → p (if p (succ n) then (succ n) else ℰℕ n p) ≡ tt
-  right x = trans≡ (cong≡ (λ ■ → p ■) (cong≡ (λ ■ → if ■ then (succ n) else ℰℕ n p) x)) (ℕComp n p x₀ pr (superlemma x₀ n (therefore x₀ (succ n) pr x) lt)) where
+  right x = trans≡ (cong≡ (λ ■ → p ■) (cong≡ (λ ■ → if ■ then (succ n) else ℰℕ n p) x)) (ℕComp n p x₀ pr (super x₀ n (therefore x₀ (succ n) pr x) lt)) where
     therefore : ∀ a b → p a ≡ tt → p b ≡ ff → (a =ℕ b) ≡ ff
-    therefore a b x₁ x₂ = ∨-elim (𝔹LEM (a =ℕ b)) (λ x₃ → EFQ (trans≡ (sym≡ (cong≡ p (equalslemma a b x₃))) x₁) x₂) (λ z → z) where
-      equalslemma : ∀ a b → (a =ℕ b) ≡ tt → a ≡ b
-      equalslemma zero zero x₃ = refl
-      equalslemma zero (succ _) ()
-      equalslemma (succ _) zero ()
-      equalslemma (succ a) (succ b) x₃ = cong≡ (λ ■ → succ ■) (equalslemma a b x₃)
-    superlemma : ∀ a b → (a =ℕ succ b) ≡ ff → (a ≤ℕ succ b) ≡ tt → (a ≤ℕ b) ≡ tt
-    superlemma zero zero x₁ x₂ = refl
-    superlemma zero (succ b) x₁ x₂ = refl
-    superlemma (succ a) zero x₁ x₂ = EFQ (minilemma a x₂) x₁ where
-      minilemma : ∀ a → (succ a ≤ℕ succ zero) ≡ tt → (a =ℕ zero) ≡ tt
-      minilemma zero _ = refl
-      minilemma (succ _) ()
-    superlemma (succ a) (succ b) x₁ x₂ = superlemma a b x₁ x₂
-
-ℰ𝔹 : ℰ 𝔹
-ℰ𝔹 p = if (p tt) then (tt) else (ff)
+    therefore a b x₁ x₂ = ∨-elim (𝔹LEM (a =ℕ b)) (λ x₃ → EFQ (trans≡ (sym≡ (cong≡ p (equals a b x₃))) x₁) x₂) (λ z → z) where
+      equals : ∀ a b → (a =ℕ b) ≡ tt → a ≡ b
+      equals zero zero x₃ = refl
+      equals zero (succ _) ()
+      equals (succ _) zero ()
+      equals (succ a) (succ b) x₃ = cong≡ (λ ■ → succ ■) (equals a b x₃)
+    super : ∀ a b → (a =ℕ succ b) ≡ ff → (a ≤ℕ succ b) ≡ tt → (a ≤ℕ b) ≡ tt
+    super zero zero x₁ x₂ = refl
+    super zero (succ b) x₁ x₂ = refl
+    super (succ a) zero x₁ x₂ = EFQ (mini a x₂) x₁ where
+      mini : ∀ a → (succ a ≤ℕ succ zero) ≡ tt → (a =ℕ zero) ≡ tt
+      mini zero _ = refl
+      mini (succ _) ()
+    super (succ a) (succ b) x₁ x₂ = super a b x₁ x₂
 
 ℰ𝕓 : ℰ 𝕓
 ℰ𝕓 p = if (p ₁) then (₁) else (₀)
@@ -100,6 +98,33 @@ forevery s p = ! forsome s (λ x → ! p x)
   x'2 : d'
   x'2 = e' (λ x' → p (x2 , x'))
 
+fst : {A B : Set} → A × B → A
+fst (a , _) = a
+snd : {A B : Set} → A × B → B
+snd (_ , b) = b
+
+-- (p : D → 𝔹) → (x : D) → p x ≡ tt → (p (ε p)) ≡ tt
+
+×Searchable : {A B : Set} → Searchable A → Searchable B → Searchable (A × B)
+Searchable.ε (×Searchable {A} {B} ℰA ℰB) p = a , b where
+  a : A
+  a = Searchable.ε ℰA (λ x → forsome (Searchable.ε ℰB) (λ x' → p (x , x')))
+  b : B
+  b = Searchable.ε ℰB (λ x' → p (a , x')) 
+Searchable.def2 (×Searchable {A} {B} ℰA ℰB) p x₀ pr = h where
+  surely : (ab : A × B) → p ab ≡ tt → p (fst ab , snd ab) ≡ tt
+  surely (_ , _) x₂ = x₂
+  a : A
+  a = Searchable.ε ℰA (λ x → forsome (Searchable.ε ℰB) (λ x' → p (x , x')))
+  b : B
+  b = Searchable.ε ℰB (λ x' → p (a , x'))
+  h1 : (λ a → p (a , snd x₀)) (Searchable.ε ℰA (λ a → p (a , snd x₀))) ≡ tt
+  h1 = Searchable.def2 ℰA (λ x → p (x , snd x₀)) (fst x₀) (surely x₀ pr)
+  h2 : p (a , snd x₀) ≡ tt
+  h2 = {!!}
+  h : p (a , b) ≡ tt
+  h = {!!}
+
 {-# TERMINATING #-}
 ℰℕ→ : {d : Set} → (ℕ → ℰ d) → ℰ (ℕ → d)
 ℰℕ→ {d} e p n = e n (λ x → q n x (ℰℕ→ (λ i → e (n +ℕ succ i)) (q n x))) where
@@ -110,5 +135,5 @@ forevery s p = ! forsome s (λ x → ! p x)
 ℰℂ : ℰ ℂ
 ℰℂ = ℰℕ→ (λ i → ℰ𝕓)
 
-ℰℝ : ℕ → ℰ ℝ
-ℰℝ n = ℰ× (ℰℕ n) ℰℂ
+-- ℰℝ : ℕ → ℰ ℝ
+-- ℰℝ n = ℰ× (ℰℕ n) ℰℂ

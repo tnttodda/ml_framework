@@ -1,7 +1,39 @@
 open import ToddPrelude
 open import CantorNumbers
-open import RealNumbers
 open import Searchers
+
+ℝ : Set
+ℝ = ℕ × ℂ
+
+ℝ̂ : Set
+ℝ̂ = ℝ × ℕ
+
+postulate ℝ-change : {n : ℕ} → (succ n , ℂ₀) ≡ (n , ℂ₁)
+
+ℝ₀ ℝ₁ : ℝ
+ℝ₀ = zero , ℂ₀
+ℝ₁ = succ zero , ℂ₀
+
+_<ℝ_ : ℝ → ℝ̂ → 𝔹
+(n , r) <ℝ ((m , s) , ε) = if (n =ℕ m) then (r <ℂ s) ε else (n <ℕ m)
+
+_=ℝ_ : ℝ → ℝ̂ → 𝔹
+(n , r) =ℝ ((m , s) , ε) = if (n =ℕ m) then (r =ℂ s) ε else (ff)
+
+_||_ : 𝔹 → 𝔹 → 𝔹
+ff || ff = ff
+ff || tt = tt
+tt || ff = tt
+tt || tt = tt
+
+_≤ℝ_ : ℝ → ℝ̂ → 𝔹
+(r ≤ℝ s) = (r =ℝ s) || (r <ℝ s)
+
+postulate lemma : (c : ℂ) → (ε : ℕ) → (ℂ₀ =ℂ c) ε ≡ ff → (ℂ₀ <ℂ c) ε ≡ tt
+
+ℝ₀-bottom : (r : ℝ̂) → (ℝ₀ =ℝ r) ≡ ff → (ℝ₀ <ℝ r) ≡ tt
+ℝ₀-bottom ((zero , r) , ε) pr = lemma r ε pr
+ℝ₀-bottom ((succ m , r) , _) pr = refl
 
 record LossSpace {Y : Set} (Φ : Y → Y → ℝ) : Set₁ where
   field
@@ -107,9 +139,6 @@ supNormℂ f e n = ℰℂ (λ c → isNormℂ f c e) n
 supNormℕ : ℕ → (ℕ → ℕ) → ℕ
 supNormℕ size f = (ℰℕ size) (λ n → forevery (ℰℕ size) (λ n' → maxℕ (f n) (f n') =ℕ f n))
 
-Φℕ→ℕ' : ℕ → (ℕ → ℕ) → (ℕ → ℕ) → ℝ
-Φℕ→ℕ' zero f g = π₁ (Φℕ (f zero) (g zero)) , ℂ₀
-Φℕ→ℕ' (succ n) f g = (π₁ (Φℕ (f n) (g n)) +ℕ π₁ (Φℕ→ℕ' n f g)) , ℂ₀
-
 Φℕ→ℕ : ℕ → (ℕ → ℕ) → (ℕ → ℕ) → ℝ
-Φℕ→ℕ n = Φℕ→ℕ' (div n 3)
+Φℕ→ℕ zero f g = π₁ (Φℕ (f zero) (g zero)) , ℂ₀
+Φℕ→ℕ (succ n) f g = (π₁ (Φℕ (f n) (g n)) +ℕ π₁ (Φℕ→ℕ n f g)) , ℂ₀
