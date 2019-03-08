@@ -139,39 +139,71 @@ Searchable.def2 (×Searchable {A} {B} ℰA ℰB) p x₀ pr = h where
 -- ℰℝ n = ℰ× (ℰℕ n) ℰℂ
 
 data Fin : ℕ → Set where
-  fzero : {n : ℕ} → Fin (succ n)
+  fzero : {n : ℕ} → Fin n
   fsucc  : {n : ℕ} (i : Fin n) → Fin (succ n)
 
-gogo : ∀ {n} → Fin n → Fin (succ n)
-gogo fzero = fzero
-gogo (fsucc x) = fsucc (gogo x)
-
-postulate F0 : Fin zero
+raise : ∀ {n} → Fin n → Fin (succ n)
+raise fzero = fzero
+raise (fsucc x) = fsucc (raise x)
 
 top : ∀ n → Fin n
-top zero = F0
-top (succ zero) = fzero
+top zero = fzero
 top (succ n) = fsucc (top n)
 
-foneSearchable : Searchable (Fin 1)
-Searchable.ε foneSearchable p = fzero
-Searchable.def2 foneSearchable p (fzero) pr = pr
-Searchable.def2 foneSearchable p (fsucc x₀) pr = trans≡ (cong≡ (λ ■ → p ■) (lemma x₀)) pr where
-  lemma : (a : Fin zero) → fzero ≡ fsucc a
-  lemma ()
+_=Fin_ : ∀ {n} → Fin n → Fin n → 𝔹
+fzero =Fin fzero = tt
+fsucc f₁ =Fin fsucc f₂ = f₁ =Fin f₂
+_ =Fin _ = ff
 
-ftwoSearchable : Searchable (Fin 2)
-Searchable.ε ftwoSearchable p = if p (fsucc (fzero)) then fsucc fzero else fzero
-Searchable.def2 ftwoSearchable = {!!}
+lower : ∀ {n} → Fin (succ n) → Fin n
+lower {succ n} (fsucc f) = fsucc (lower {n} f)
+lower  _ = fzero
 
-fthreeSearchable : Searchable (Fin 3)
-Searchable.ε fthreeSearchable p = if p (fsucc (fsucc fzero)) then fsucc (fsucc fzero) else gogo (Searchable.ε ftwoSearchable (λ x → p (gogo x)))
-Searchable.def2 fthreeSearchable = {!!}
+raiselower : ∀ n → (f : Fin n) → (lower (raise f) ≡ f)
+raiselower zero fzero = refl
+raiselower (succ n) fzero = refl
+raiselower (succ n) (fsucc f) = cong≡ (λ ■ → fsucc ■) (raiselower n f)
+
+lowerraise : ∀ n → (f : Fin (succ n)) →  (top (succ n) =Fin f) ≡ ff → (raise (lower f) ≡ f)
+lowerraise zero fzero _ = refl
+lowerraise zero (fsucc fzero) ()
+lowerraise (succ n) fzero _ = refl
+lowerraise (succ n) (fsucc f) pr = cong≡ (λ ■ → fsucc ■) (lowerraise n f pr)
+
+=Fin-implies-≡ : ∀ {n} → (f₁ f₂ : Fin n) → (f₁ =Fin f₂) ≡ tt → f₁ ≡ f₂
+=Fin-implies-≡ fzero fzero refl = refl
+=Fin-implies-≡ fzero (fsucc _) ()
+=Fin-implies-≡ (fsucc _) fzero ()
+=Fin-implies-≡ (fsucc f₁) (fsucc f₂) pr = cong≡ (λ ■ → fsucc ■) (=Fin-implies-≡ f₁ f₂ pr)
 
 funSearchable : ∀ n → Searchable (Fin n) → Searchable (Fin (succ n))
-Searchable.ε (funSearchable zero ℰF) p = {!!}
-Searchable.ε (funSearchable (succ zero) ℰF) p = fzero
-Searchable.ε (funSearchable (succ (succ n)) ℰF) p = if p topElement then topElement else gogo (Searchable.ε ℰF (λ x → p (gogo x))) where
-  topElement : {!!}
-  topElement = {!!}
-Searchable.def2 (funSearchable n ℰF) = {!!}
+Searchable.ε (funSearchable zero ℰF) p = if p (fsucc fzero) then fsucc fzero else raise fzero
+Searchable.ε (funSearchable (succ n) ℰF) p = if (p topElement) then (topElement) else raise (Searchable.ε ℰF (λ x → p (raise x))) where
+  topElement : Fin (succ (succ n))
+  topElement = top (succ (succ n))
+Searchable.def2 (funSearchable zero ℰF) p fzero pr = ∨-elim (𝔹LEM (p (fsucc fzero))) left right where
+  left : p (fsucc fzero) ≡ tt → p (if p (fsucc fzero) then fsucc fzero else fzero) ≡ tt
+  left pr₁ = trans≡ ((cong≡ (λ ■ → p ■) (cong≡ (λ ■ → if ■ then fsucc fzero else fzero) pr₁))) pr₁
+  right : p (fsucc fzero) ≡ ff → p (if p (fsucc fzero) then fsucc fzero else fzero) ≡ tt
+  right pr₁ = trans≡ (cong≡ (λ ■ → p ■) (cong≡ (λ ■ → if ■ then fsucc fzero else fzero) pr₁)) pr
+Searchable.def2 (funSearchable zero ℰF) p (fsucc fzero) pr = trans≡ ((cong≡ (λ ■ → p ■) (cong≡ (λ ■ → if ■ then fsucc fzero else fzero) pr))) pr
+Searchable.def2 (funSearchable (succ n) ℰF) p x₀ pr = ∨-elim (𝔹LEM (p topElement)) left right where
+  topElement : Fin (succ (succ n))
+  topElement = top (succ (succ n))
+  left : p topElement ≡ tt → p (if p topElement then topElement else raise ((Searchable.ε ℰF (λ x → p (raise x))))) ≡ tt
+  left pr₁ = trans≡ ((cong≡ (λ ■ → p ■) (cong≡ (λ ■ → if ■ then topElement else raise (Searchable.ε ℰF (λ x → p (raise x)))) pr₁))) pr₁
+  right : p topElement ≡ ff → p (if p topElement then topElement else raise ((Searchable.ε ℰF (λ x → p (raise x))))) ≡ tt
+  right pr₁ = trans≡ ((cong≡ (λ ■ → p ■) (cong≡ (λ ■ → if ■ then topElement else raise (Searchable.ε ℰF (λ x → p (raise x)))) pr₁))) IH where
+    IH : p (raise (Searchable.ε ℰF (λ x → p (raise x)))) ≡ tt
+    IH = ∨-elim (𝔹LEM (topElement =Fin x₀)) IHleft IHright where
+      IHleft : (topElement =Fin x₀) ≡ tt → p (raise (Searchable.ε ℰF (λ x → p (raise x)))) ≡ tt 
+      IHleft pr₃ = EFQ (trans≡ (cong≡ (λ ■ → p ■) (=Fin-implies-≡ topElement x₀ pr₃)) pr) pr₁
+      IHright : (topElement =Fin x₀) ≡ ff → p (raise (Searchable.ε ℰF (λ x → p (raise x)))) ≡ tt 
+      IHright pr₃ = IHH where
+        IHH : p (raise (Searchable.ε ℰF (λ x → p (raise x)))) ≡ tt
+        IHH = Searchable.def2 ℰF (λ x → p (raise x)) (lower x₀) (trans≡ (cong≡ (λ ■ → p ■) (lowerraise (succ n) x₀ pr₃)) pr)
+
+
+-- trans≡ (cong≡ (λ ■ → p ■) conjecture) pr where
+--        conjecture : raise (Searchable.ε ℰF (λ x → p (raise x))) ≡ x₀
+--        conjecture = {!!}
