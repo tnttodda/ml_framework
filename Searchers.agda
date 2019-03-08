@@ -121,9 +121,9 @@ Searchable.def2 (×Searchable {A} {B} ℰA ℰB) p x₀ pr = h where
   h1 : (λ a → p (a , snd x₀)) (Searchable.ε ℰA (λ a → p (a , snd x₀))) ≡ tt
   h1 = Searchable.def2 ℰA (λ x → p (x , snd x₀)) (fst x₀) (surely x₀ pr)
   h2 : p (a , snd x₀) ≡ tt
-  h2 = {!!}
+  h2 = ⋆⟪TODO⟫⋆
   h : p (a , b) ≡ tt
-  h = {!!}
+  h = ⋆⟪TODO⟫⋆
 
 {-# TERMINATING #-}
 ℰℕ→ : {d : Set} → (ℕ → ℰ d) → ℰ (ℕ → d)
@@ -137,3 +137,41 @@ Searchable.def2 (×Searchable {A} {B} ℰA ℰB) p x₀ pr = h where
 
 -- ℰℝ : ℕ → ℰ ℝ
 -- ℰℝ n = ℰ× (ℰℕ n) ℰℂ
+
+data Fin : ℕ → Set where
+  fzero : {n : ℕ} → Fin (succ n)
+  fsucc  : {n : ℕ} (i : Fin n) → Fin (succ n)
+
+gogo : ∀ {n} → Fin n → Fin (succ n)
+gogo fzero = fzero
+gogo (fsucc x) = fsucc (gogo x)
+
+postulate F0 : Fin zero
+
+top : ∀ n → Fin n
+top zero = F0
+top (succ zero) = fzero
+top (succ n) = fsucc (top n)
+
+foneSearchable : Searchable (Fin 1)
+Searchable.ε foneSearchable p = fzero
+Searchable.def2 foneSearchable p (fzero) pr = pr
+Searchable.def2 foneSearchable p (fsucc x₀) pr = trans≡ (cong≡ (λ ■ → p ■) (lemma x₀)) pr where
+  lemma : (a : Fin zero) → fzero ≡ fsucc a
+  lemma ()
+
+ftwoSearchable : Searchable (Fin 2)
+Searchable.ε ftwoSearchable p = if p (fsucc (fzero)) then fsucc fzero else fzero
+Searchable.def2 ftwoSearchable = {!!}
+
+fthreeSearchable : Searchable (Fin 3)
+Searchable.ε fthreeSearchable p = if p (fsucc (fsucc fzero)) then fsucc (fsucc fzero) else gogo (Searchable.ε ftwoSearchable (λ x → p (gogo x)))
+Searchable.def2 fthreeSearchable = {!!}
+
+funSearchable : ∀ n → Searchable (Fin n) → Searchable (Fin (succ n))
+Searchable.ε (funSearchable zero ℰF) p = {!!}
+Searchable.ε (funSearchable (succ zero) ℰF) p = fzero
+Searchable.ε (funSearchable (succ (succ n)) ℰF) p = if p topElement then topElement else gogo (Searchable.ε ℰF (λ x → p (gogo x))) where
+  topElement : {!!}
+  topElement = {!!}
+Searchable.def2 (funSearchable n ℰF) = {!!}
