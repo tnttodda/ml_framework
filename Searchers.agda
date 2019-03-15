@@ -202,8 +202,3 @@ Searchable.def2 (funSearchable (succ n) ℰF) p x₀ pr = ∨-elim (𝔹LEM (p t
       IHright pr₃ = IHH where
         IHH : p (raise (Searchable.ε ℰF (λ x → p (raise x)))) ≡ tt
         IHH = Searchable.def2 ℰF (λ x → p (raise x)) (lower x₀) (trans≡ (cong≡ (λ ■ → p ■) (lowerraise (succ n) x₀ pr₃)) pr)
-
-
--- trans≡ (cong≡ (λ ■ → p ■) conjecture) pr where
---        conjecture : raise (Searchable.ε ℰF (λ x → p (raise x))) ≡ x₀
---        conjecture = {!!}

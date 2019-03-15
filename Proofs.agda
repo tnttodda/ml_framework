@@ -15,49 +15,17 @@ record LossSpace {Y : Set} (Φ : Y → Y → ℝ) : Set₁ where
 buildReg : {X Y : Set} (ℰ : (X → 𝔹) → X) → (Φ : Y → Y → ℝ) → γ X Y
 buildReg ℰ Φ = λ ε y m → ℰ (λ x → (Φ (m x) y <ℝ ε))
 
-RegressionConvergence : {X Y : Set} (ε : ℝ) (Φ : Y → Y → ℝ) (reg : Y → (X → Y) → X)
-                                       (k : X) (f : X → Y) → Set
-RegressionConvergence {X} {Y} ε Φ reg k f = (Φ (f k) (f (reg (f k) f)) <ℝ ε) ≡ tt
+RegressionConvergence : {X Y : Set} (Φ : Y → Y → ℝ) (reg : Y → (X → Y) → X) (k : X) (f : X → Y) → Set
+RegressionConvergence {X} {Y} Φ reg k f = ∀ ε → (ε₀ : (ℝ₀ =ℝ ε) ≡ ff) → (Φ (f k) (f (reg (f k) f)) <ℝ ε) ≡ tt
 
-solis-wets-noise : {X Y : Set} (ε : ℝ) (Φ : Y → Y → ℝ) (ψ : Y → Y) (reg : Y → (X → Y) → X)
-                          (k : X) (f : X → Y) → Set
-solis-wets-noise {X} {Y} ε Φ ψ reg k f = (Φ (ψ (f k)) (f (reg (f k) f)) <ℝ (ε +ℝ (Φ (ψ (f k)) (f k)))) ≡ tt
+solis-wets-noise : {X Y : Set} (Φ : Y → Y → ℝ) (ψ : Y → Y) (reg : Y → (X → Y) → X) (k : X) (f : X → Y) → Set
+solis-wets-noise {X} {Y} Φ ψ reg k f = ∀ ε → (ε₀ : (ℝ₀ =ℝ ε) ≡ ff) → (Φ (ψ (f k)) (f (reg (f k) f)) <ℝ (ε +ℝ (Φ (ψ (f k)) (f k)))) ≡ tt
 
-postulate Φℝ : ℝ → ℝ → ℝ
-postulate Φℝrule : ∀ a b ε → (Φℝ a b <ℝ ε) ≡ tt → (a <ℝ (ε +ℝ b)) ≡ tt  
-
-continuous : {Y : Set} (Φ₁ : Y → Y → ℝ) (f : Y → ℝ)
-                  → (ε : ℝ) → (ℝ₀ =ℝ ε) ≡ ff → (k x : Y) → Set
-continuous Φ₁ f ε ε₀ k x = ∃ (λ δ → (((Φ₁ k x <ℝ δ) ≡ tt) ∧ ((ℝ₀ =ℝ δ) ≡ ff))) → ((Φℝ (f k) (f x) <ℝ ε) ≡ tt)
-
-theorem-noise : {X Y : Set} (ε : ℝ) (ε₀ : (ℝ₀ =ℝ ε) ≡ ff)
-                      → (ℰ : (X → 𝔹) → X) (Φ : Y → Y → ℝ) (ψ : Y → Y)
-                      → Searchable X → LossSpace Φ
-                      → (reg : ℝ → Y → (X → Y) → X)
-                      → (k : X) (f : X → Y)
-                      → continuous Φ (λ y → Φ (ψ (f k)) y) ε ε₀ (f (reg ε (f k) f)) (f k)
-                      → RegressionConvergence ε Φ (reg ε) k f
-                      → solis-wets-noise ε Φ ψ (reg ε) k f
-theorem-noise {X} {Y} ε ε₀ ℰ₁ Φ ψ S L reg k f cont R = conclusion where
-  noisy : Y 
-  noisy = ψ (f k)
-  regressed : Y
-  regressed = f (reg ε (f k) f)
-  normal : Y
-  normal = f k
-  fact : (Φ regressed normal <ℝ ε) ≡ tt
-  fact = trans≡ (cong≡ (λ ■ → ■ <ℝ ε) (LossSpace.sym L regressed normal)) R
-  conjecture : (Φℝ (Φ noisy regressed) (Φ noisy normal) <ℝ ε) ≡ tt
-  conjecture = cont (ε ⇒ (fact & ε₀))
-  conclusion : (Φ noisy regressed <ℝ (ε +ℝ Φ noisy normal)) ≡ tt
-  conclusion = Φℝrule (Φ noisy regressed) (Φ noisy normal) ε conjecture
-
-theorem : {X Y : Set} (ε : ℝ) (ε₀ : (ℝ₀ =ℝ ε) ≡ ff)
-             → (ℰ : (X → 𝔹) → X) (Φ : Y → Y → ℝ)
+theorem : {X Y : Set} (ℰ : (X → 𝔹) → X) (Φ : Y → Y → ℝ)
              → CompactSpace ℰ → LossSpace Φ
              → (k : X) (f : X → Y)
-             → RegressionConvergence ε Φ (buildReg ℰ Φ ε) k f
-theorem {X} {Y} ε ε₀ ℰ Φ C L k f = firstly thirdly where
+             → ∀ ε → (ε₀ : (ℝ₀ =ℝ ε) ≡ ff) → (Φ (f k) (f (buildReg ℰ Φ ε (f k) f)) <ℝ ε) ≡ tt
+theorem {X} {Y} ℰ Φ S L k f ε ε₀ = firstly thirdly  where
   p : X → 𝔹
   p = λ x → Φ (f x) (f k) <ℝ ε
   k' : X
@@ -67,7 +35,67 @@ theorem {X} {Y} ε ε₀ ℰ Φ C L k f = firstly thirdly where
   secondly : ∃ (λ x → p x ≡ tt)
   secondly = k ⇒ trans≡ (cong≡ (λ ■ → ■ <ℝ ε) (LossSpace.ref L (f k))) (ℝ₀-bottom ε ε₀)
   thirdly : p k' ≡ tt
-  thirdly = CompactSpace.def2 C p secondly
+  thirdly = CompactSpace.def2 S p secondly
+
+postulate Φℝ : ℝ → ℝ → ℝ
+postulate Φℝrule : ∀ {a b ε} → (Φℝ a b <ℝ ε) ≡ tt → (b <ℝ (ε +ℝ a)) ≡ tt
+postulate ℝSearchable : Searchable ℝ
+
+∧l : {A B : Set} → A ∧ B → A
+∧l (a & _) = a
+∧r : {A B : Set} → A ∧ B → B
+∧r (_ & b) = b
+
+_⇨_ : 𝔹 → 𝔹 → 𝔹
+tt ⇨ ff = ff
+_ ⇨ _ = tt
+
+𝔹rule1 : {b₂ : 𝔹} → (b₁ : 𝔹) → ((! b₁) && b₂) ≡ tt → b₁ ≡ ff
+𝔹rule1 tt ()
+𝔹rule1 ff _ = refl
+𝔹rule2 : (b₁ b₂ : 𝔹) → (b₁ ⇨ b₂) ≡ tt → b₁ ≡ tt → b₂ ≡ tt
+𝔹rule2 ff ff _ x₁ = x₁
+𝔹rule2 _ tt _ _ = refl
+𝔹rule2 tt ff () x₁
+𝔹rule3 : {b₁ b₂ : 𝔹} → (b₁ && b₂) ≡ tt → b₂ ≡ tt
+𝔹rule3 {_} {tt} _ = refl
+𝔹rule3 {ff} {ff} x = x
+𝔹rule3 {tt} {ff} ()
+
+continuityCondition : {Y : Set} (Φ : Y → Y → ℝ) (f : Y → ℝ) (ε : ℝ) → (k x : Y) → (δ : ℝ) → 𝔹
+continuityCondition Φ f ε k x δ = ((! (ℝ₀ =ℝ δ)) && ((Φ k x <ℝ δ) ⇨ (Φℝ (f k) (f x) <ℝ ε)))
+
+continuous : {Y : Set} (Φ : Y → Y → ℝ) (f : Y → ℝ) (k : Y) → Set
+continuous Φ f k = ∀ ε → (ℝ₀ =ℝ ε) ≡ ff → ∃ (λ δ → ∀ x → continuityCondition Φ f ε k x δ ≡ tt)
+
+Π₀ : {X : Set} {A : X → Set} → (∃ \(x : X) → A x) → X
+Π₀(x ⇒ _) = x
+
+Π₁ : {X : Set} {A : X → Set} → (z : ∃ \(x : X) → A x) → A(Π₀ z)
+Π₁(_ ⇒ a) = a
+
+theorem-noise : {X Y : Set} (ℰ : (X → 𝔹) → X) (Φ : Y → Y → ℝ) (ψ : Y → Y)
+                      → CompactSpace ℰ → LossSpace Φ
+                      → (reg : Y → (X → Y) → X)
+                      → (k : X) (f : X → Y)
+                      → continuous Φ (λ y → Φ (ψ (f k)) y) (f k)
+                      → RegressionConvergence Φ reg k f
+                      → solis-wets-noise Φ ψ reg k f
+theorem-noise {X} {Y} ℰ Φ ψ S L reg k f cont R ε ε₀ = conjecture where
+  noisy regressed normal : Y
+  normal = f k
+  regressed = f (reg normal f)
+  noisy = ψ normal
+  δ : ℝ
+  δ = Π₀ (cont ε ε₀)
+  δworks : continuityCondition Φ (λ y → Φ (ψ (f k)) y) ε normal regressed δ ≡ tt
+  δworks = (Π₁ (cont ε ε₀)) regressed
+  fact : (Φ normal regressed <ℝ δ) ≡ tt
+  fact = R δ (𝔹rule1 (ℝ₀ =ℝ δ) δworks)
+  δ₁ : (Φ normal regressed <ℝ δ) ≡ tt → (Φℝ (Φ noisy normal) (Φ noisy regressed) <ℝ ε) ≡ tt
+  δ₁ = 𝔹rule2 (Φ normal regressed <ℝ δ) (Φℝ (Φ noisy normal) (Φ noisy regressed) <ℝ ε) (𝔹rule3 δworks)
+  conjecture :  (Φ noisy regressed <ℝ (ε +ℝ Φ noisy normal)) ≡ tt
+  conjecture = Φℝrule (δ₁ fact)
 
 -- γℕℕconverges : ∀ n → (ε : ℝ̂) (ε₀ : (ℝ₀ =ℝ ε) ≡ ff) → RegressionConvergence ε Φℕ (γℕ,ℕ n ε)
 -- γℕℕconverges n ε ε₀ = λ k f → theorem ε ε₀ (ℰℕ n) Φℕ {!!} ℕisLoss k f
