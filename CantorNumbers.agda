@@ -9,6 +9,10 @@ head α = α zero
 tail : ℂ → ℂ
 tail α = λ n → α (succ n)
 
+_::_ : {X : ℕ → Set} → X 0 → ((n : ℕ) → X(succ n)) → ((n : ℕ) → X n)
+(x :: α) 0 = x
+(x :: α) (succ n) = α n
+
 ℂ₀ ℂ₁ : ℂ
 ℂ₀ n = ₀
 ℂ₁ n = ₁
@@ -32,19 +36,18 @@ _=ℂ_ : ℂ → ℂ → ℕ → 𝔹
 maxℂ : ℂ → ℂ → ℂ
 maxℂ a b = λ n → if (a >ℂ b) n then a n else b n
 
-postulate Float : Set
-{-# BUILTIN FLOAT Float #-}
+{-# TERMINATING #-}
 
-primitive
-  primFloatMinus             : Float → Float → Float
-  primFloatTimes             : Float → Float → Float
-  primFloatNumericalEquality : Float → Float → 𝔹
-  primFloatNumericalLess : Float → Float → 𝔹
-  primFloatNegate            : Float → Float
+_+ℂ_ : ℂ → ℂ → ℕ → ℂ
+(c₁ +ℂ c₂) n = (c₁ +'ℂ c₂) zero where
+  _+'ℂ_ : ℂ → ℂ → ℕ → ℂ
+  (a +'ℂ b) m = next (head a) (head b) where
+    continue : ℂ
+    continue = if m <ℕ n then ((tail a) +'ℂ (tail b)) (succ m) else (tail a) 
+    next : 𝕓 → 𝕓 → ℂ
+    next ₀ ₀ = ₀ :: continue
+    next ₁ ₁ = ℂ₁
+    next _ _ = ₁ :: continue
 
-_≤Float_ : Float → Float → 𝔹
-f ≤Float f' = primFloatNumericalEquality f f' ∣∣ primFloatNumericalLess f f'
 
-binaryFloat : ℕ → Float
-binaryFloat zero = 0.5
-binaryFloat (succ n) = primFloatTimes (binaryFloat n) 0.5
+

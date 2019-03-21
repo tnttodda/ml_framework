@@ -26,9 +26,9 @@ _&&_ : 𝔹 → 𝔹 → 𝔹
 tt && tt = tt
 _ && _ = ff
 
-_∣∣_ : 𝔹 → 𝔹 → 𝔹
-ff ∣∣ ff = ff
-_ ∣∣ _ = tt
+_||_ : 𝔹 → 𝔹 → 𝔹
+ff || ff = ff
+_ || _ = tt
 
 data 𝕓 : Set where
   ₀ ₁ : 𝕓
@@ -61,7 +61,7 @@ zero +ℕ m = m
 {-# BUILTIN NATPLUS _+ℕ_ #-}
 
 _≤ℕ_ : ℕ → ℕ → 𝔹
-n ≤ℕ m = (n =ℕ m) ∣∣ (n <ℕ m)
+n ≤ℕ m = (n =ℕ m) || (n <ℕ m)
 
 _*ℕ_ : ℕ → ℕ → ℕ
 zero *ℕ m = zero
@@ -108,9 +108,6 @@ data _∨_ (A B : Set) : Set where
   inl : A → A ∨ B
   inr : B → A ∨ B
 
-data _∧_ (A B : Set) : Set where
-  _&_ : A → B → A ∧ B
-
 ∨-elim : {A B C : Set} → (A ∨ B) → (A → C) → (B → C) → C
 ∨-elim (inl a) c _ = c a
 ∨-elim (inr b) _ c = c b
@@ -119,11 +116,24 @@ data _∧_ (A B : Set) : Set where
 𝔹LEM ff = inr refl
 𝔹LEM tt = inl refl
 
+data _∧_ (A B : Set) : Set where
+  _&_ : A → B → A ∧ B
+
+∧l : {A B : Set} → A ∧ B → A
+∧l (a & _) = a
+∧r : {A B : Set} → A ∧ B → B
+∧r (_ & b) = b
+
 _⊕_ : 𝔹 → 𝔹 → Set
 a ⊕ b = ((a ≡ tt) ∧ (b ≡ ff)) ∨ ((a ≡ ff) ∧ (b ≡ tt))
 
 data ∃ {X : Set} (P : X → Set) : Set where
   _⇒_ : (w : X) → P w → ∃ (λ x → P x)
+
+Π₀ : {X : Set} {A : X → Set} → (∃ \(x : X) → A x) → X
+Π₀(x ⇒ _) = x
+Π₁ : {X : Set} {A : X → Set} → (z : ∃ \(x : X) → A x) → A(Π₀ z)
+Π₁(_ ⇒ a) = a
 
 postulate FunExt : {A : Set} {B : A → Set} {f g : (x : A) → B x} → (∀ x → f x ≡ g x) → f ≡ g
 

@@ -1,6 +1,5 @@
 open import ToddPrelude
 open import CantorNumbers
-open import RealNumbers
 
 ℰ : Set → Set
 ℰ d = (d → 𝔹) → d

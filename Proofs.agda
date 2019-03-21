@@ -4,7 +4,11 @@ open import Searchers
 -- open import Lossers
 -- open import Regressors
 
-record LossSpace {Y : Set} (Φ : Y → Y → ℝ) : Set₁ where
+postulate ℝ : Set
+postulate 𝕣 : RealNumber ℝ
+open RealNumber {ℝ} 𝕣
+
+record LossSpace {Y : Set} (Φ : Y → Y → ℝ) : Set where
   field
     pos : ∀ y₁ y₂ → ((ℝ₀ <ℝ (Φ y₁ y₂)) ≡ tt) ∨ ((ℝ₀ =ℝ (Φ y₁ y₂)) ≡ tt)
     ref : ∀ y₁ → (Φ y₁ y₁ ≡ ℝ₀)
@@ -37,10 +41,6 @@ theorem {X} {Y} ℰ Φ S L k f ε ε₀ = firstly thirdly  where
   thirdly : p k' ≡ tt
   thirdly = CompactSpace.def2 S p secondly
 
-postulate Φℝ : ℝ → ℝ → ℝ
-postulate Φℝrule : ∀ {a b ε} → (Φℝ a b <ℝ ε) ≡ tt → (b <ℝ (ε +ℝ a)) ≡ tt
-postulate ℝSearchable : Searchable ℝ
-
 ∧l : {A B : Set} → A ∧ B → A
 ∧l (a & _) = a
 ∧r : {A B : Set} → A ∧ B → B
@@ -66,7 +66,7 @@ continuityCondition : {Y : Set} (Φ : Y → Y → ℝ) (f : Y → ℝ) (ε : ℝ
 continuityCondition Φ f ε k x δ = ((! (ℝ₀ =ℝ δ)) && ((Φ k x <ℝ δ) ⇨ (Φℝ (f k) (f x) <ℝ ε)))
 
 continuous : {Y : Set} (Φ : Y → Y → ℝ) (f : Y → ℝ) (k : Y) → Set
-continuous Φ f k = ∀ ε → (ℝ₀ =ℝ ε) ≡ ff → ∃ (λ δ → ∀ x → continuityCondition Φ f ε k x δ ≡ tt)
+continuous Φ f k = ∀ ε → (ℝ₀ =ℝ ε) ≡ ff → ∃ (λ δ → ∀ x → (((ℝ₀ =ℝ δ) ≡ ff) ∧ ((Φ k x <ℝ δ) ≡ tt → (Φℝ (f k) (f x) <ℝ ε) ≡ tt)))
 
 Π₀ : {X : Set} {A : X → Set} → (∃ \(x : X) → A x) → X
 Π₀(x ⇒ _) = x
@@ -81,21 +81,16 @@ theorem-noise : {X Y : Set} (ℰ : (X → 𝔹) → X) (Φ : Y → Y → ℝ) (�
                       → continuous Φ (λ y → Φ (ψ (f k)) y) (f k)
                       → RegressionConvergence Φ reg k f
                       → solis-wets-noise Φ ψ reg k f
-theorem-noise {X} {Y} ℰ Φ ψ S L reg k f cont R ε ε₀ = conjecture where
+theorem-noise {X} {Y} ℰ Φ ψ S L reg k f cont R ε ε₀ = Φℝrule noise-diff where
   noisy regressed normal : Y
   normal = f k
   regressed = f (reg normal f)
   noisy = ψ normal
   δ : ℝ
   δ = Π₀ (cont ε ε₀)
-  δworks : continuityCondition Φ (λ y → Φ (ψ (f k)) y) ε normal regressed δ ≡ tt
-  δworks = (Π₁ (cont ε ε₀)) regressed
-  fact : (Φ normal regressed <ℝ δ) ≡ tt
-  fact = R δ (𝔹rule1 (ℝ₀ =ℝ δ) δworks)
-  δ₁ : (Φ normal regressed <ℝ δ) ≡ tt → (Φℝ (Φ noisy normal) (Φ noisy regressed) <ℝ ε) ≡ tt
-  δ₁ = 𝔹rule2 (Φ normal regressed <ℝ δ) (Φℝ (Φ noisy normal) (Φ noisy regressed) <ℝ ε) (𝔹rule3 δworks)
-  conjecture :  (Φ noisy regressed <ℝ (ε +ℝ Φ noisy normal)) ≡ tt
-  conjecture = Φℝrule (δ₁ fact)
-
--- γℕℕconverges : ∀ n → (ε : ℝ̂) (ε₀ : (ℝ₀ =ℝ ε) ≡ ff) → RegressionConvergence ε Φℕ (γℕ,ℕ n ε)
--- γℕℕconverges n ε ε₀ = λ k f → theorem ε ε₀ (ℰℕ n) Φℕ {!!} ℕisLoss k f
+  δworks : ((ℝ₀ =ℝ δ) ≡ ff) ∧ ((Φ normal regressed <ℝ δ) ≡ tt → (Φℝ (Φ noisy normal) (Φ noisy regressed) <ℝ ε) ≡ tt)
+  δworks = Π₁ (cont ε ε₀) regressed
+  δreg : (Φ normal regressed <ℝ δ) ≡ tt
+  δreg = R δ (∧l δworks)
+  noise-diff : (Φℝ (Φ noisy normal) (Φ noisy regressed) <ℝ ε) ≡ tt
+  noise-diff = ∧r δworks δreg
