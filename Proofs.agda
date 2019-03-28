@@ -41,38 +41,8 @@ theorem {X} {Y} ℰ Φ S L k f ε ε₀ = firstly thirdly  where
   thirdly : p k' ≡ tt
   thirdly = CompactSpace.def2 S p secondly
 
-∧l : {A B : Set} → A ∧ B → A
-∧l (a & _) = a
-∧r : {A B : Set} → A ∧ B → B
-∧r (_ & b) = b
-
-_⇨_ : 𝔹 → 𝔹 → 𝔹
-tt ⇨ ff = ff
-_ ⇨ _ = tt
-
-𝔹rule1 : {b₂ : 𝔹} → (b₁ : 𝔹) → ((! b₁) && b₂) ≡ tt → b₁ ≡ ff
-𝔹rule1 tt ()
-𝔹rule1 ff _ = refl
-𝔹rule2 : (b₁ b₂ : 𝔹) → (b₁ ⇨ b₂) ≡ tt → b₁ ≡ tt → b₂ ≡ tt
-𝔹rule2 ff ff _ x₁ = x₁
-𝔹rule2 _ tt _ _ = refl
-𝔹rule2 tt ff () x₁
-𝔹rule3 : {b₁ b₂ : 𝔹} → (b₁ && b₂) ≡ tt → b₂ ≡ tt
-𝔹rule3 {_} {tt} _ = refl
-𝔹rule3 {ff} {ff} x = x
-𝔹rule3 {tt} {ff} ()
-
-continuityCondition : {Y : Set} (Φ : Y → Y → ℝ) (f : Y → ℝ) (ε : ℝ) → (k x : Y) → (δ : ℝ) → 𝔹
-continuityCondition Φ f ε k x δ = ((! (ℝ₀ =ℝ δ)) && ((Φ k x <ℝ δ) ⇨ (Φℝ (f k) (f x) <ℝ ε)))
-
 continuous : {Y : Set} (Φ : Y → Y → ℝ) (f : Y → ℝ) (k : Y) → Set
 continuous Φ f k = ∀ ε → (ℝ₀ =ℝ ε) ≡ ff → ∃ (λ δ → ∀ x → (((ℝ₀ =ℝ δ) ≡ ff) ∧ ((Φ k x <ℝ δ) ≡ tt → (Φℝ (f k) (f x) <ℝ ε) ≡ tt)))
-
-Π₀ : {X : Set} {A : X → Set} → (∃ \(x : X) → A x) → X
-Π₀(x ⇒ _) = x
-
-Π₁ : {X : Set} {A : X → Set} → (z : ∃ \(x : X) → A x) → A(Π₀ z)
-Π₁(_ ⇒ a) = a
 
 theorem-noise : {X Y : Set} (ℰ : (X → 𝔹) → X) (Φ : Y → Y → ℝ) (ψ : Y → Y)
                       → CompactSpace ℰ → LossSpace Φ
