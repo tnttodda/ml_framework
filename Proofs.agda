@@ -1,66 +1,67 @@
 open import ToddPrelude
 open import RealNumbers
 open import Searchers
--- open import Lossers
+open import Lossers
 -- open import Regressors
 
-postulate ℝ : Set
-postulate 𝕣 : RealNumber ℝ
 open RealNumber {ℝ} 𝕣
 
-record LossSpace {Y : Set} (Φ : Y → Y → ℝ) : Set where
-  field
-    pos : ∀ y₁ y₂ → ((ℝ₀ <ℝ (Φ y₁ y₂)) ≡ tt) ∨ ((ℝ₀ =ℝ (Φ y₁ y₂)) ≡ tt)
-    ref : ∀ y₁ → (Φ y₁ y₁ ≡ ℝ₀)
-    sym : ∀ y₁ y₂ → (Φ y₁ y₂) ≡ (Φ y₂ y₁)
-
 γ : (X Y : Set) → Set
-γ X Y = ℝ → Y → (X → Y) → X
-buildReg : {X Y : Set} (ℰ : (X → 𝔹) → X) → (Φ : Y → Y → ℝ) → γ X Y
-buildReg ℰ Φ = λ ε y m → ℰ (λ x → (Φ (m x) y <ℝ ε))
+γ X Y = Y → (X → Y) → X
 
-RegressionConvergence : {X Y : Set} (Φ : Y → Y → ℝ) (reg : Y → (X → Y) → X) (k : X) (f : X → Y) → Set
-RegressionConvergence {X} {Y} Φ reg k f = ∀ ε → (ε₀ : (ℝ₀ =ℝ ε) ≡ ff) → (Φ (f k) (f (reg (f k) f)) <ℝ ε) ≡ tt
+buildReg : {X Y : Set} (ℰ : (X → 𝔹) → X) → (Φ : Y → Y → ℝ) → ℝ → γ X Y
+buildReg ℰ Φ ε = λ y m → ℰ (λ x → (Φ (m x) y <ℝ ε))
 
-solis-wets-noise : {X Y : Set} (Φ : Y → Y → ℝ) (ψ : Y → Y) (reg : Y → (X → Y) → X) (k : X) (f : X → Y) → Set
-solis-wets-noise {X} {Y} Φ ψ reg k f = ∀ ε → (ε₀ : (ℝ₀ =ℝ ε) ≡ ff) → (Φ (ψ (f k)) (f (reg (f k) f)) <ℝ (ε +ℝ (Φ (ψ (f k)) (f k)))) ≡ tt
-
-theorem : {X Y : Set} (ℰ : (X → 𝔹) → X) (Φ : Y → Y → ℝ)
-             → CompactSpace ℰ → LossSpace Φ
-             → (k : X) (f : X → Y)
-             → ∀ ε → (ε₀ : (ℝ₀ =ℝ ε) ≡ ff) → (Φ (f k) (f (buildReg ℰ Φ ε (f k) f)) <ℝ ε) ≡ tt
-theorem {X} {Y} ℰ Φ S L k f ε ε₀ = firstly thirdly  where
+RegressionConvergence : {X Y : Set} (L : LossSpace Y) (k : X) (f : X → Y) → Set
+RegressionConvergence {X} {Y} L k f = ∀ ε → (ε₀ : (ℝ₀ <ℝ ε) ≡ tt)
+                                                              → ∃ (λ (reg : γ X Y) → ((LossSpace.Φ L) (f k) (f (reg (f k) f)) <ℝ ε) ≡ tt)
+                                                              
+theorem : {X Y : Set} (S : Searchable X) (L : LossSpace Y) → ∀ k f → RegressionConvergence L k f
+theorem {X} {Y} S L k f ε ε₀ = buildReg ℰₓ Φ ε ⇒ firstly thirdly where
+  ℰₓ : (X → 𝔹) → X
+  ℰₓ = Searchable.ε S
+  Φ : Y → Y → ℝ
+  Φ = LossSpace.Φ L
   p : X → 𝔹
   p = λ x → Φ (f x) (f k) <ℝ ε
   k' : X
-  k' = ℰ p
+  k' = ℰₓ p
   firstly : (p k' ≡ tt) → (Φ (f k) (f k') <ℝ ε) ≡ tt
   firstly r = trans≡ (cong≡ (λ ■ → ■ <ℝ ε) (LossSpace.sym L (f k) (f k'))) r
   secondly : ∃ (λ x → p x ≡ tt)
-  secondly = k ⇒ trans≡ (cong≡ (λ ■ → ■ <ℝ ε) (LossSpace.ref L (f k))) (ℝ₀-bottom ε ε₀)
+  secondly = k ⇒ trans≡ (cong≡ (λ ■ → ■ <ℝ ε) (LossSpace.ref L (f k))) ε₀
   thirdly : p k' ≡ tt
-  thirdly = CompactSpace.def2 S p secondly
+  thirdly = Searchable.def2 S p (Π₀ secondly) (Π₁ secondly)
 
-continuous : {Y : Set} (Φ : Y → Y → ℝ) (f : Y → ℝ) (k : Y) → Set
-continuous Φ f k = ∀ ε → (ℝ₀ =ℝ ε) ≡ ff → ∃ (λ δ → ∀ x → (((ℝ₀ =ℝ δ) ≡ ff) ∧ ((Φ k x <ℝ δ) ≡ tt → (Φℝ (f k) (f x) <ℝ ε) ≡ tt)))
+continuous : {Y Z : Set} (Φ₁ : Y → Y → ℝ) (Φ₂ : Z → Z → ℝ) (F : Y → Z) → Set
+continuous {Y} {Z} Φ₁ Φ₂ F = ∀ ε → (ℝ₀ <ℝ ε) ≡ tt
+                                                → ∃ (λ δ → (((ℝ₀ <ℝ δ) ≡ tt) ∧ (∀ (y₁ y₂ : Y) → ((Φ₁ y₁ y₂ <ℝ δ) ≡ tt → (Φ₂ (F y₁) (F y₂) <ℝ ε) ≡ tt))))
 
-theorem-noise : {X Y : Set} (ℰ : (X → 𝔹) → X) (Φ : Y → Y → ℝ) (ψ : Y → Y)
-                      → CompactSpace ℰ → LossSpace Φ
-                      → (reg : Y → (X → Y) → X)
-                      → (k : X) (f : X → Y)
-                      → continuous Φ (λ y → Φ (ψ (f k)) y) (f k)
-                      → RegressionConvergence Φ reg k f
-                      → solis-wets-noise Φ ψ reg k f
-theorem-noise {X} {Y} ℰ Φ ψ S L reg k f cont R ε ε₀ = Φℝrule noise-diff where
-  noisy regressed normal : Y
-  normal = f k
-  regressed = f (reg normal f)
-  noisy = ψ normal
+RegressionConvergenceNoise : {X Y : Set} (Φ : Y → Y → ℝ) (ψ : Y → Y) (k : X) (f : X → Y) → Set
+RegressionConvergenceNoise {X} {Y} Φ ψ k f = ∀ ε → (ε₀ : (ℝ₀ <ℝ ε) ≡ tt)
+                                                                             → ∃ (λ (reg : γ X Y) → (Φ (ψ (f k)) (f (reg (f k) f)) <ℝ (ε +ℝ (Φ (ψ (f k)) (f k)))) ≡ tt)
+
+theorem-noise : {X Y : Set}  (S : Searchable X) (L : LossSpace Y)
+                      → ∀ k f → ∀ (ψ : Y → Y) → continuous {Y} {ℝ} (LossSpace.Φ L) Φℝ (λ y → (LossSpace.Φ L) (ψ (f k)) y)
+                      → RegressionConvergenceNoise (LossSpace.Φ L) ψ k f
+theorem-noise {X} {Y} S L k f ψ C ε ε₀ = reg ⇒ (Φℝrule noise-diff) where
+  R : RegressionConvergence {X} {Y} L k f
+  R = theorem S L k f
+  ℰₓ : (X → 𝔹) → X
+  ℰₓ = Searchable.ε S
+  Φ : Y → Y → ℝ
+  Φ = LossSpace.Φ L
   δ : ℝ
-  δ = Π₀ (cont ε ε₀)
-  δworks : ((ℝ₀ =ℝ δ) ≡ ff) ∧ ((Φ normal regressed <ℝ δ) ≡ tt → (Φℝ (Φ noisy normal) (Φ noisy regressed) <ℝ ε) ≡ tt)
-  δworks = Π₁ (cont ε ε₀) regressed
-  δreg : (Φ normal regressed <ℝ δ) ≡ tt
-  δreg = R δ (∧l δworks)
-  noise-diff : (Φℝ (Φ noisy normal) (Φ noisy regressed) <ℝ ε) ≡ tt
-  noise-diff = ∧r δworks δreg
+  δ = Π₀ (C ε ε₀)
+  δ₀ : (ℝ₀ <ℝ δ) ≡ tt
+  δ₀ = ∧l (Π₁ (C ε ε₀))
+  reg : γ X Y
+  reg = Π₀ (R δ δ₀)
+  oracle regδ noisy : Y
+  oracle = f k
+  regδ = f (reg oracle f)
+  noisy = ψ oracle
+  Rconvδ : ((Φ oracle regδ) <ℝ δ) ≡ tt
+  Rconvδ = Π₁ (R δ δ₀)
+  noise-diff : (Φℝ (Φ noisy oracle) (Φ noisy regδ) <ℝ ε) ≡ tt
+  noise-diff = ∧r (Π₁ (C ε ε₀)) oracle regδ Rconvδ

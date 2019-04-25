@@ -1,6 +1,8 @@
 open import Agda.Primitive
  using (Level; _⊔_; lzero; lsuc)
 
+-- Bools, Bits, Nats, Lists, Equality, Product, Sum, Existential, EFQ
+
 postulate ⋆⟪TODO⟫⋆ : {A : Set} → A
 
 data 𝔹 : Set where
@@ -94,6 +96,12 @@ trans≡ refl refl = refl
 
 cong≡ : {A B : Set} {x y : A} → (f : A → B) → x ≡ y → f x ≡ f y
 cong≡ f refl = refl
+
+if≡tt : {A : Set} {a₁ a₂ : A} {b : 𝔹} → (b ≡ tt) → (if b then a₁ else a₂) ≡ a₁
+if≡tt refl = refl
+
+if≡ff : {A : Set} {a₁ a₂ : A} (b : 𝔹) → (b ≡ ff) → (if b then a₁ else a₂) ≡ a₂
+if≡ff _ refl = refl
   
 data _×_ (A B : Set) : Set where
   _,_ : A → B → A × B
@@ -115,6 +123,10 @@ data _∨_ (A B : Set) : Set where
 𝔹LEM : (b : 𝔹) → (b ≡ tt) ∨ (b ≡ ff)
 𝔹LEM ff = inr refl
 𝔹LEM tt = inl refl
+
+𝕓LEM : (b : 𝕓) → (b ≡ ₀) ∨ (b ≡ ₁)
+𝕓LEM ₀ = inl refl
+𝕓LEM ₁ = inr refl
 
 data _∧_ (A B : Set) : Set where
   _&_ : A → B → A ∧ B

@@ -1,144 +1,86 @@
 open import ToddPrelude
+open import RealNumbers
 open import CantorNumbers
 open import Searchers
 
-ℝ : Set
-ℝ = ℕ × ℂ
+open RealNumber {ℝ} 𝕣
 
-ℝ̂ : Set
-ℝ̂ = ℝ × ℕ
-
-postulate ℝ-change : {n : ℕ} → (succ n , ℂ₀) ≡ (n , ℂ₁)
-
-ℝ₀ ℝ₁ : ℝ
-ℝ₀ = zero , ℂ₀
-ℝ₁ = succ zero , ℂ₀
-
-_<ℝ_ : ℝ → ℝ̂ → 𝔹
-(n , r) <ℝ ((m , s) , ε) = if (n =ℕ m) then (r <ℂ s) ε else (n <ℕ m)
-
-_=ℝ_ : ℝ → ℝ̂ → 𝔹
-(n , r) =ℝ ((m , s) , ε) = if (n =ℕ m) then (r =ℂ s) ε else (ff)
-
-_||_ : 𝔹 → 𝔹 → 𝔹
-ff || ff = ff
-ff || tt = tt
-tt || ff = tt
-tt || tt = tt
-
-_≤ℝ_ : ℝ → ℝ̂ → 𝔹
-(r ≤ℝ s) = (r =ℝ s) || (r <ℝ s)
-
-postulate lemma : (c : ℂ) → (ε : ℕ) → (ℂ₀ =ℂ c) ε ≡ ff → (ℂ₀ <ℂ c) ε ≡ tt
-
-ℝ₀-bottom : (r : ℝ̂) → (ℝ₀ =ℝ r) ≡ ff → (ℝ₀ <ℝ r) ≡ tt
-ℝ₀-bottom ((zero , r) , ε) pr = lemma r ε pr
-ℝ₀-bottom ((succ m , r) , _) pr = refl
-
-record LossSpace {Y : Set} (Φ : Y → Y → ℝ) : Set₁ where
+record LossSpace (Y : Set) : Set where
   field
-    pos : ∀ y₁ y₂ ε → ((ℝ₀ <ℝ (Φ y₁ y₂ , ε)) ≡ tt) ∨ ((ℝ₀ =ℝ (Φ y₁ y₂ , ε)) ≡ tt)
+    Φ : Y → Y → ℝ
+    pos : ∀ y₁ y₂ → ℝ₀ ≤ℝ (Φ y₁ y₂)
     ref : ∀ y₁ → (Φ y₁ y₁ ≡ ℝ₀)
     sym : ∀ y₁ y₂ → (Φ y₁ y₂) ≡ (Φ y₂ y₁)
 
-Φℕ : ℕ → ℕ → ℝ
-Φℕ n m = maxℕ (n −ℕ m) (m −ℕ n) , ℂ₀
+ℕ→ℝ : ℕ → ℝ
+ℕ→ℝ zero = ℝ₀
+ℕ→ℝ (succ n) = ℝ₁ +ℝ (ℕ→ℝ n)
 
-ℕisLoss : LossSpace Φℕ
-LossSpace.pos ℕisLoss zero zero ε = inr (lem ε) where
-  lem : ∀ ε → (ℝ₀ =ℝ (Φℕ zero zero , ε)) ≡ tt
-  lem zero = refl
-  lem (succ ε) = lem ε
-LossSpace.pos ℕisLoss zero (succ y₂) ε = inl refl
-LossSpace.pos ℕisLoss (succ y₁) zero ε = inl refl
-LossSpace.pos ℕisLoss (succ y₁) (succ y₂) ε = LossSpace.pos ℕisLoss y₁ y₂ ε
-LossSpace.ref ℕisLoss zero = refl
-LossSpace.ref ℕisLoss (succ y₁) = cong≡ (λ ■ → ■ , ℂ₀) (lem y₁) where
-  lem : ∀ y₁ → maxℕ (y₁ −ℕ y₁) (y₁ −ℕ y₁) ≡ zero
-  lem zero = refl
-  lem (succ y₁) = lem y₁
-LossSpace.sym ℕisLoss zero zero = refl
-LossSpace.sym ℕisLoss zero (succ y₂) = refl
-LossSpace.sym ℕisLoss y₁ y₂ = cong≡ (λ ■ → ■ , ℂ₀) (lem y₁ y₂) where
-  lem : ∀ y₁ y₂ → maxℕ (y₁ −ℕ y₂) (y₂ −ℕ y₁) ≡ maxℕ (y₂ −ℕ y₁) (y₁ −ℕ y₂)
-  lem zero zero = refl
-  lem zero (succ y₂) = refl
-  lem (succ y₁) zero = refl
-  lem (succ y₁) (succ y₂) = lem y₁ y₂
+ℕ→ℝFact : ∀ n → (zero <ℕ n) ≡ tt → (ℝ₀ <ℝ ℕ→ℝ n) ≡ tt
+ℕ→ℝFact zero ()
+ℕ→ℝFact (succ zero) _ = trans≡ (cong≡ (λ ■ → ℝ₀ <ℝ ■) (+0 ℝ₁)) <0
+ℕ→ℝFact (succ (succ n)) _ = <+ <0 (inl (ℕ→ℝFact (succ n) refl))
 
-Φ𝔹 : 𝔹 → 𝔹 → ℝ
-Φ𝔹 ff ff = ℝ₀
-Φ𝔹 tt tt = ℝ₀
-Φ𝔹 _ _ = ℝ₁
+ℕLoss : LossSpace ℕ
+LossSpace.Φ ℕLoss n₁ n₂ = ℕ→ℝ (maxℕ (n₁ −ℕ n₂) (n₂ −ℕ n₁))
+LossSpace.pos ℕLoss zero zero = inr (_≡ℝ_ refl)
+LossSpace.pos ℕLoss zero (succ n₂) = inl (ℕ→ℝFact (maxℕ zero (succ n₂)) refl)
+LossSpace.pos ℕLoss (succ n₁) zero = inl (ℕ→ℝFact (maxℕ (succ n₁) zero) refl)
+LossSpace.pos ℕLoss (succ n₁) (succ n₂) = LossSpace.pos ℕLoss n₁ n₂
+LossSpace.ref ℕLoss n = cong≡ ℕ→ℝ (trans≡ (maxFact (n −ℕ n)) (minusFact n)) where
+  minusFact : ∀ x → (x −ℕ x) ≡ zero
+  minusFact zero = refl
+  minusFact (succ x) = minusFact x
+  maxFact : ∀ x → maxℕ x x ≡ x
+  maxFact zero = refl
+  maxFact (succ x) = cong≡ succ (maxFact x)
+LossSpace.sym ℕLoss n₁ n₂ = cong≡ ℕ→ℝ (maxFact (n₁ −ℕ n₂) (n₂ −ℕ n₁)) where
+  maxFact : ∀ x y → maxℕ x y ≡ maxℕ y x
+  maxFact zero zero = refl
+  maxFact zero (succ y) = refl
+  maxFact (succ x) zero = refl
+  maxFact (succ x) (succ y) = cong≡ succ (maxFact x y)
 
-φ𝕓 : 𝕓 → 𝕓 → 𝕓
-φ𝕓 ₀ ₀ = ₀
-φ𝕓 ₁ ₁ = ₀
-φ𝕓 _ _ = ₁
+conv : 𝕓 → ℕ → ℝ
+conv ₀ n = ℝ₀
+conv ₁ n = ℝ₁ ÷ℝ (ℕ→ℝ (n +ℕ 1))
 
-Φ𝕓 : 𝕓 → 𝕓 → ℝ
-Φ𝕓 a b = zero , λ n → φ𝕓 a b
+ℕℂ→ℝ : ℕ → (ℂ → ℝ)
+ℕℂ→ℝ zero c = conv (c 0) 0
+ℕℂ→ℝ (succ n) c = (conv (c (succ n)) (succ n)) +ℝ (ℕℂ→ℝ n c)
 
-𝕓isLoss : LossSpace Φ𝕓
-LossSpace.pos 𝕓isLoss ₀ ₀ ε = inr (lem ε) where
-  lem : ∀ ε → (ℝ₀ =ℝ (Φ𝕓 ₀ ₀ , ε)) ≡ tt
-  lem zero = refl
-  lem (succ ε) = lem ε
-LossSpace.pos 𝕓isLoss ₀ ₁ ε = inl refl
-LossSpace.pos 𝕓isLoss ₁ ₀ ε = inl refl
-LossSpace.pos 𝕓isLoss ₁ ₁ ε = inr (lem ε) where
-  lem : ∀ ε → (ℝ₀ =ℝ (Φ𝕓 ₁ ₁ , ε)) ≡ tt
-  lem zero = refl
-  lem (succ ε) = lem ε  
-LossSpace.ref 𝕓isLoss ₀ = refl
-LossSpace.ref 𝕓isLoss ₁ = refl
-LossSpace.sym 𝕓isLoss ₀ ₀ = refl
-LossSpace.sym 𝕓isLoss ₀ ₁ = refl
-LossSpace.sym 𝕓isLoss ₁ ₀ = refl
-LossSpace.sym 𝕓isLoss ₁ ₁ = refl
+Φℂ𝕟 : ℂ → ℂ → ℂ
+Φℂ𝕟 c₁ c₂ n = φ𝕓 (c₁ n) (c₂ n)
 
-Φℂ : ℂ → ℂ → ℝ
-Φℂ a b = 0 , λ n → φ𝕓 (a n) (b n)
+symm : ∀ b₁ b₂ → φ𝕓 b₁ b₂ ≡ φ𝕓 b₂ b₁
+symm ₀ ₀ = refl
+symm ₀ ₁ = refl
+symm ₁ ₀ = refl
+symm ₁ ₁ = refl
+reff : ∀ b₁ {b₂} → b₁ ≡ b₂ → φ𝕓 b₁ b₂ ≡ ₀
+reff ₀ refl = refl
+reff ₁ refl = refl
+conv3 : ∀ n → conv ₀ n ≡ ℝ₀
+conv3 n = refl
+conv4 : ∀ n → (ℝ₀ <ℝ conv ₁ n) ≡ tt
+conv4 zero = trans≡ (cong≡ (λ ■ → ℝ₀ <ℝ (ℝ₁ ÷ℝ ■)) (+0 ℝ₁)) (trans≡ (cong≡ (λ ■ → ℝ₀ <ℝ ■) ÷1) <0)
+conv4 (succ n) = (<÷ <0 (<+ <0 (inl (ℕ→ℝFact (n +ℕ 1) (<zero n))))) where
+  <zero : ∀ n → (zero <ℕ (n +ℕ 1)) ≡ tt
+  <zero zero = refl
+  <zero (succ n) = refl
 
-𝕓LEM : (b : 𝕓) → (b ≡ ₁) ∨ (b ≡ ₀)
-𝕓LEM ₁ = inl refl
-𝕓LEM ₀ = inr refl
-
-ℂisLoss : LossSpace Φℂ
-LossSpace.pos ℂisLoss y₁ y₂ zero =  ⋆⟪TODO⟫⋆ where
-  lem2 : (c : ℂ) → c zero ≡ ₁ → ((ℂ₀ <ℂ c) zero) ≡ tt
-  lem2 c x =  ⋆⟪TODO⟫⋆
-  lem'' : {c c' : ℂ} → (b b' : 𝕓) → (head c ≡ b) → (head c' ≡ b') → ((c' =ℂ c) zero) ≡ (b' =𝕓 b)
-  lem'' =  ⋆⟪TODO⟫⋆
-  lem' : (c c' : ℂ) → ((c' =ℂ c) zero) ≡ ((head c') =𝕓 (head c))
-  lem' c c' = refl
-  lem : (c : ℂ) → c zero ≡ ₀ → ((ℂ₀ =ℂ c) zero) ≡ tt
-  lem c x =  ⋆⟪TODO⟫⋆
-LossSpace.pos ℂisLoss y₁ y₂ (succ ε) =  ⋆⟪TODO⟫⋆ 
-LossSpace.ref ℂisLoss y₁ = cong≡ (λ ■ → 0 , ■) (FunExt lem) where
-  𝕓ref : ∀ b → (φ𝕓 b b) ≡ ₀ 
-  𝕓ref ₀ = refl
-  𝕓ref ₁ = refl
-  lem : ∀ k → (λ n → φ𝕓 (y₁ n) (y₁ n)) k ≡ ℂ₀ k
-  lem k = trans≡ (𝕓ref (y₁ k)) (sym≡ (𝕓ref (ℂ₀ k)))
-LossSpace.sym ℂisLoss =  ⋆⟪TODO⟫⋆
-
-isNormAtℂ : (ℂ → ℂ) → ℂ → ℕ → 𝔹
-isNormAtℂ f c n = forevery ℰℂ (λ c' → maxℂ (f c) (f c') n =𝕓 (f c) n)
-
-isNormℂ : (ℂ → ℂ) → ℂ → ℕ → 𝔹
-isNormℂ f c zero = isNormAtℂ f c zero
-isNormℂ f c (succ e) = isNormAtℂ f c (succ e) && isNormℂ f c e 
-
-supNormℂ : (ℂ → ℂ) → ℕ → ℂ
-supNormℂ f e n = ℰℂ (λ c → isNormℂ f c e) n
-
-Φℂ→ℂ : ℕ → (ℂ → ℂ) → (ℂ → ℂ) → ℝ
-Φℂ→ℂ n f g = Φℂ (supNormℂ f n) (supNormℂ g n)
-
-supNormℕ : ℕ → (ℕ → ℕ) → ℕ
-supNormℕ size f = (ℰℕ size) (λ n → forevery (ℰℕ size) (λ n' → maxℕ (f n) (f n') =ℕ f n))
-
-Φℕ→ℕ : ℕ → (ℕ → ℕ) → (ℕ → ℕ) → ℝ
-Φℕ→ℕ zero f g = π₁ (Φℕ (f zero) (g zero)) , ℂ₀
-Φℕ→ℕ (succ n) f g = (π₁ (Φℕ (f n) (g n)) +ℕ π₁ (Φℕ→ℕ n f g)) , ℂ₀
+ℂLoss : ℕ → LossSpace ℂ
+LossSpace.Φ (ℂLoss n) c₁ c₂ = ℕℂ→ℝ n (Φℂ𝕟 c₁ c₂)
+LossSpace.pos (ℂLoss zero) c₁ c₂ = ∨-elim (𝕓LEM (φ𝕓 (c₁ 0) (c₂ 0)))
+                                                           (λ z → inr (sym= (trans= (_≡ℝ_ (cong≡ (λ ■ → conv ■ 0) z)) (_≡ℝ_ (conv3 0)))))
+                                                           (λ z → inl (trans≡ (cong≡ (λ ■ → ℝ₀ <ℝ conv ■ 0) z) (conv4 0)))
+LossSpace.pos (ℂLoss (succ n)) c₁ c₂ = (≤+ (∨-elim (𝕓LEM ((Φℂ𝕟 c₁ c₂ (succ n))))
+                                                                 (λ z → inr (sym= (trans= (_≡ℝ_ (cong≡ (λ ■ → conv ■ (succ n)) z)) (_≡ℝ_ (conv3 n)))))
+                                                                 (λ z → inl (trans≡ (cong≡ (λ ■ → ℝ₀ <ℝ conv ■ (succ n)) z) (conv4 (succ n)))))
+                                                                 (LossSpace.pos (ℂLoss n) c₁ c₂))
+LossSpace.ref (ℂLoss zero) c₁ = trans≡ (cong≡ (λ ■ → conv ■ 0) (reff (c₁ 0) refl)) (conv3 0)
+LossSpace.ref (ℂLoss (succ n)) c₁ = trans≡ (cong≡ (λ ■ → (conv (Φℂ𝕟 c₁ c₁ (succ n)) (succ n)) +ℝ ■) (LossSpace.ref (ℂLoss n) c₁))
+                                                          (trans≡ (cong≡ (λ ■ → ■ +ℝ ℝ₀) (trans≡ (cong≡ (λ ■ → conv ■ (succ n)) (reff (c₁ (succ n)) refl)) (conv3 n))) (+0 ℝ₀))
+LossSpace.sym (ℂLoss zero) c₁ c₂ = cong≡ (λ ■ → conv ■ 0) (symm (c₁ 0) (c₂ 0))
+LossSpace.sym (ℂLoss (succ n)) c₁ c₂ = trans≡ (cong≡ (λ ■ → conv (Φℂ𝕟 c₁ c₂ (succ n)) (succ n) +ℝ ■) (LossSpace.sym (ℂLoss n) c₁ c₂))
+                                                                 (cong≡ (λ ■ → ■ +ℝ (ℕℂ→ℝ n (Φℂ𝕟 c₂ c₁))) (cong≡ (λ ■ → conv ■ (succ n)) (symm (c₁ (succ n)) (c₂ (succ n)))))
