@@ -12,23 +12,23 @@ forevery s p = ! forsome s (λ x → ! p x)
 record Searchable (D : Set) : Set where -- K ⊆ D
   field
     ε : ℰ D
-    def2 : (p : D → 𝔹) → (x : D) → p x ≡ tt → (p (ε p)) ≡ tt
+    def2 : (p : D → 𝔹) → ∃ (λ x → p x ≡ tt) → (p (ε p)) ≡ tt
 
 data 𝟙 : Set where
   ⋆ : 𝟙
 
 𝟙Searchable' : Searchable 𝟙
 Searchable.ε 𝟙Searchable' p = ⋆
-Searchable.def2 𝟙Searchable' p ⋆ pr = pr
+Searchable.def2 𝟙Searchable' p (⋆ ⇒ pr) = pr
 
 𝔹Searchable' : Searchable 𝔹
 Searchable.ε 𝔹Searchable' p = if (p tt) then (tt) else (ff)
-Searchable.def2 𝔹Searchable' p ff pr = ∨-elim (𝔹LEM (p tt)) left-side right-side where
+Searchable.def2 𝔹Searchable' p (ff ⇒ pr) = ∨-elim (𝔹LEM (p tt)) left-side right-side where
   left-side : p tt ≡ tt → p (if p tt then tt else ff) ≡ tt
   left-side t = trans≡ (cong≡ (λ ■ → p ■) (cong≡ (λ ■ → if ■ then tt else ff) t)) t
   right-side : p tt ≡ ff → p (if p tt then tt else ff) ≡ tt
   right-side f = trans≡ (cong≡ (λ ■ → p ■) (cong≡ (λ ■ → if ■ then tt else ff) f)) pr
-Searchable.def2 𝔹Searchable' p tt pr = trans≡ (cong≡ (λ ■ → p ■) (cong≡ (λ ■ → if ■ then tt else ff) pr)) pr
+Searchable.def2 𝔹Searchable' p (tt ⇒ pr) = trans≡ (cong≡ (λ ■ → p ■) (cong≡ (λ ■ → if ■ then tt else ff) pr)) pr
 
 data Fin : ℕ → Set where
   fzero : {n : ℕ} → Fin n
@@ -73,13 +73,13 @@ Searchable.ε (finSearchable' zero ℰF) p = if p (fsucc fzero) then fsucc fzero
 Searchable.ε (finSearchable' (succ n) ℰF) p = if (p topElement) then (topElement) else raise (Searchable.ε ℰF (λ x → p (raise x))) where
   topElement : Fin (succ (succ n))
   topElement = top (succ (succ n))
-Searchable.def2 (finSearchable' zero ℰF) p fzero pr = ∨-elim (𝔹LEM (p (fsucc fzero))) left right where
+Searchable.def2 (finSearchable' zero ℰF) p (fzero ⇒ pr) = ∨-elim (𝔹LEM (p (fsucc fzero))) left right where
   left : p (fsucc fzero) ≡ tt → p (if p (fsucc fzero) then fsucc fzero else fzero) ≡ tt
   left pr₁ = trans≡ ((cong≡ (λ ■ → p ■) (cong≡ (λ ■ → if ■ then fsucc fzero else fzero) pr₁))) pr₁
   right : p (fsucc fzero) ≡ ff → p (if p (fsucc fzero) then fsucc fzero else fzero) ≡ tt
   right pr₁ = trans≡ (cong≡ (λ ■ → p ■) (cong≡ (λ ■ → if ■ then fsucc fzero else fzero) pr₁)) pr
-Searchable.def2 (finSearchable' zero ℰF) p (fsucc fzero) pr = trans≡ ((cong≡ (λ ■ → p ■) (cong≡ (λ ■ → if ■ then fsucc fzero else fzero) pr))) pr
-Searchable.def2 (finSearchable' (succ n) ℰF) p x₀ pr = ∨-elim (𝔹LEM (p topElement)) left right where
+Searchable.def2 (finSearchable' zero ℰF) p ((fsucc fzero) ⇒ pr) = trans≡ ((cong≡ (λ ■ → p ■) (cong≡ (λ ■ → if ■ then fsucc fzero else fzero) pr))) pr
+Searchable.def2 (finSearchable' (succ n) ℰF) p (x₀ ⇒ pr) = ∨-elim (𝔹LEM (p topElement)) left right where
   topElement : Fin (succ (succ n))
   topElement = top (succ (succ n))
   left : p topElement ≡ tt → p (if p topElement then topElement else raise ((Searchable.ε ℰF (λ x → p (raise x))))) ≡ tt
@@ -93,16 +93,16 @@ Searchable.def2 (finSearchable' (succ n) ℰF) p x₀ pr = ∨-elim (𝔹LEM (p 
       IHright : (topElement =Fin x₀) ≡ ff → p (raise (Searchable.ε ℰF (λ x → p (raise x)))) ≡ tt 
       IHright pr₃ = IHH where
         IHH : p (raise (Searchable.ε ℰF (λ x → p (raise x)))) ≡ tt
-        IHH = Searchable.def2 ℰF (λ x → p (raise x)) (lower x₀) (trans≡ (cong≡ (λ ■ → p ■) (lowerraise (succ n) x₀ pr₃)) pr)
+        IHH = Searchable.def2 ℰF (λ x → p (raise x)) ((lower x₀) ⇒ (trans≡ (cong≡ (λ ■ → p ■) (lowerraise (succ n) x₀ pr₃)) pr))
 
 finSearchable : ∀ size → Searchable (Fin size)
 Searchable.ε (finSearchable zero) p = fzero
-Searchable.def2 (finSearchable zero) p fzero pr = pr
+Searchable.def2 (finSearchable zero) p (fzero ⇒ pr) = pr
 finSearchable (succ size) = finSearchable' size (finSearchable size)
 
 FinSetSearchable : {A : Set} → (size : ℕ) (f : Fin size → A) (t : A → Fin size) (ft : ∀ x → f (t x) ≡ x) → Searchable A
 Searchable.ε (FinSetSearchable size f _ _) p = f (Searchable.ε (finSearchable size) (λ x → p (f x)))
-Searchable.def2 (FinSetSearchable size f t ft) p x₀ pr = Searchable.def2 (finSearchable size) (λ x → p (f x)) (t x₀) (trans≡ (cong≡ (λ ■ → p ■) (ft x₀)) pr)
+Searchable.def2 (FinSetSearchable size f t ft) p (x₀ ⇒ pr) = Searchable.def2 (finSearchable size) (λ x → p (f x)) ((t x₀) ⇒ (trans≡ (cong≡ (λ ■ → p ■) (ft x₀)) pr))
 
 𝟙Searchable : Searchable 𝟙
 𝟙Searchable = FinSetSearchable 0 f t ft where
@@ -144,15 +144,15 @@ A∨B : {A B : Set} → Searchable A → Searchable B → (p : (A ∨ B) → �
 A∨B ℰA ℰB p tt = Aside ℰA ℰB p
 A∨B ℰA ℰB p ff = Bside ℰA ℰB p
 Searchable.ε (∨Searchable {A} {B} ℰA ℰB) p = A∨B ℰA ℰB p (p (Aside ℰA ℰB p))
-Searchable.def2 (∨Searchable ℰA ℰB) p (inl a) pr = prove (p (Aside ℰA ℰB p)) refl where
+Searchable.def2 (∨Searchable ℰA ℰB) p ((inl a) ⇒ pr) = prove (p (Aside ℰA ℰB p)) refl where
   prove : (b : 𝔹) → p (Aside ℰA ℰB p) ≡ b → p (A∨B ℰA ℰB p (p (Aside ℰA ℰB p))) ≡ tt
   prove tt pr₁ = trans≡ sub pr₁ where
     sub : (p (A∨B ℰA ℰB p (p (Aside ℰA ℰB p))) ≡ p (A∨B ℰA ℰB p tt)) 
     sub = cong≡ (λ ■ → p (A∨B ℰA ℰB p ■)) pr₁
-  prove ff pr₁ = EFQ (Searchable.def2 ℰA (λ a → p (inl a)) a pr) pr₁
-Searchable.def2 (∨Searchable ℰA ℰB) p (inr b) pr = prove (p (Aside ℰA ℰB p)) refl where
+  prove ff pr₁ = EFQ (Searchable.def2 ℰA (λ a → p (inl a)) (a ⇒ pr)) pr₁
+Searchable.def2 (∨Searchable ℰA ℰB) p ((inr b) ⇒ pr) = prove (p (Aside ℰA ℰB p)) refl where
   prove : (b : 𝔹) → p (Aside ℰA ℰB p) ≡ b → p (A∨B ℰA ℰB p (p (Aside ℰA ℰB p))) ≡ tt
-  prove ff pr₁ = trans≡ sub (Searchable.def2 ℰB (λ b → p (inr b)) b pr) where
+  prove ff pr₁ = trans≡ sub (Searchable.def2 ℰB (λ b → p (inr b)) (b ⇒ pr)) where
     sub : (p (A∨B ℰA ℰB p (p (Aside ℰA ℰB p))) ≡ p (A∨B ℰA ℰB p ff)) 
     sub = cong≡ (λ ■ → p (A∨B ℰA ℰB p ■)) pr₁
   prove tt pr₁ = trans≡ (cong≡ (λ ■ → p (A∨B ℰA ℰB p ■)) pr₁) pr₁
@@ -163,13 +163,13 @@ Searchable.ε (×Searchable {A} {B} ℰA ℰB) p = a , b where
   a = Searchable.ε ℰA (λ x → forsome (Searchable.ε ℰB) (λ x' → p (x , x')))
   b : B
   b = Searchable.ε ℰB (λ x' → p (a , x')) 
-Searchable.def2 (×Searchable {A} {B} ℰA ℰB) p (πx₁ , πx₂) pr = proof where
+Searchable.def2 (×Searchable {A} {B} ℰA ℰB) p ((πx₁ , πx₂) ⇒ pr) = proof where
   a : A
   a = Searchable.ε ℰA (λ x → forsome (Searchable.ε ℰB) (λ x' → p (x , x')))
   b : B
   b = Searchable.ε ℰB (λ x' → p (a , x'))
   proof : (λ b → p (a , b)) b ≡ tt
-  proof = Searchable.def2 ℰB (λ x → p (a , x)) b (Searchable.def2 ℰA ((λ x → forsome (Searchable.ε ℰB) (λ x' → p (x , x')))) πx₁ (Searchable.def2 ℰB (λ x' → p (πx₁ , x')) πx₂ pr))
+  proof = Searchable.def2 ℰB (λ x → p (a , x)) (b ⇒ (Searchable.def2 ℰA ((λ x → forsome (Searchable.ε ℰB) (λ x' → p (x , x')))) (πx₁ ⇒ (Searchable.def2 ℰB (λ x' → p (πx₁ , x')) (πx₂ ⇒ pr)))))
 
 ℰℕ : ℕ → ℰ ℕ
 ℰℕ zero p = zero

@@ -84,3 +84,9 @@ LossSpace.ref (ℂLoss (succ n)) c₁ = trans≡ (cong≡ (λ ■ → (conv (Φ�
 LossSpace.sym (ℂLoss zero) c₁ c₂ = cong≡ (λ ■ → conv ■ 0) (symm (c₁ 0) (c₂ 0))
 LossSpace.sym (ℂLoss (succ n)) c₁ c₂ = trans≡ (cong≡ (λ ■ → conv (Φℂ𝕟 c₁ c₂ (succ n)) (succ n) +ℝ ■) (LossSpace.sym (ℂLoss n) c₁ c₂))
                                                                  (cong≡ (λ ■ → ■ +ℝ (ℕℂ→ℝ n (Φℂ𝕟 c₂ c₁))) (cong≡ (λ ■ → conv ■ (succ n)) (symm (c₁ (succ n)) (c₂ (succ n)))))
+
+ℝLoss : LossSpace ℝ  -- Need to sort out RealNumber postulates
+LossSpace.Φ ℝLoss = Φℝ
+LossSpace.pos ℝLoss = ⋆⟪TODO⟫⋆
+LossSpace.ref ℝLoss = ⋆⟪TODO⟫⋆
+LossSpace.sym ℝLoss = ⋆⟪TODO⟫⋆
