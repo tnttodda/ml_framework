@@ -9,12 +9,12 @@ open RealNumber {ℝ} 𝕣
 γ : (X Y : Set) → Set
 γ X Y = Y → (X → Y) → X
 
-RegressionConvergence : {X Y : Set} (→ℝ : Y → ℝ) (k : X) (f : X → Y) → Set
-RegressionConvergence {X} {Y} →ℝ k f = ∀ ε → (ε₀ : (ℝ₀ <ℝ ε) ≡ tt)
-                                                              → ∃ (λ (reg : γ X Y) → (Φℝ (→ℝ (f k)) (→ℝ (f (reg (f k) f))) <ℝ ε) ≡ tt)
+RegressionConvergence : {X Y : Set} (k : X) (f : X → Y) → Set
+RegressionConvergence {X} {Y} k f = ∀ ε → (ε₀ : (ℝ₀ <ℝ ε) ≡ tt)
+                                                              → ∃ (λ (reg : γ X Y) → ∃ (λ (→ℝ : Y → ℝ) → (Φℝ (→ℝ (f k)) (→ℝ (f (reg (f k) f))) <ℝ ε) ≡ tt))
 
-theorem : {X Y : Set} (S : Searchable X) (→ℝ : Y → ℝ) → ∀ k f → RegressionConvergence →ℝ k f
-theorem {X} {Y} S →ℝ k f ε ε₀ = reg ⇒ (Searchable.def2 S p x₀pr) where
+theorem : {X Y : Set} (S : Searchable X) (→ℝ : Y → ℝ) → ∀ k f → RegressionConvergence k f
+theorem {X} {Y} S →ℝ k f ε ε₀ = reg ⇒ (→ℝ ⇒ (Searchable.def2 S p x₀pr)) where
   ℰₓ : (X → 𝔹) → X
   ℰₓ = Searchable.ε S
   reg : γ X Y
@@ -27,15 +27,16 @@ theorem {X} {Y} S →ℝ k f ε ε₀ = reg ⇒ (Searchable.def2 S p x₀pr) whe
 continuous : (F : ℝ → ℝ) → Set
 continuous F = ∀ ε → (ℝ₀ <ℝ ε) ≡ tt → ∃ (λ δ → (((ℝ₀ <ℝ δ) ≡ tt) ∧ (∀ (r₁ r₂ : ℝ) → ((Φℝ r₁ r₂ <ℝ δ) ≡ tt → (Φℝ (F r₁) (F r₂) <ℝ ε) ≡ tt))))
 
-RegressionConvergenceNoise : {X Y : Set} (→ℝ : Y → ℝ) (ψ : Y → Y) (k : X) (f : X → Y) → Set
-RegressionConvergenceNoise {X} {Y} →ℝ ψ k f = ∀ ε → (ε₀ : (ℝ₀ <ℝ ε) ≡ tt)
-                                                                             → ∃ (λ (reg : γ X Y) → (Φℝ (→ℝ (ψ (f k))) (→ℝ (f (reg (f k) f))) <ℝ (ε +ℝ (Φℝ (→ℝ (ψ (f k))) (→ℝ (f k))))) ≡ tt)
+RegressionConvergenceNoise : {X Y : Set} (ψ : Y → Y) (k : X) (f : X → Y) → Set
+RegressionConvergenceNoise {X} {Y} ψ k f = ∀ ε → (ε₀ : (ℝ₀ <ℝ ε) ≡ tt)
+                                                                          → ∃ (λ (reg : γ X Y) → ∃ (λ (→ℝ : Y → ℝ) →
+                                                                          (Φℝ (→ℝ (ψ (f k))) (→ℝ (f (reg (f k) f))) <ℝ (ε +ℝ (Φℝ (→ℝ (ψ (f k))) (→ℝ (f k))))) ≡ tt))
 
 theorem-noise : {X Y : Set} (S : Searchable X) (→ℝ : Y → ℝ)
                       → ∀ k f → ∀ (ψ : Y → Y) → continuous (λ y → Φℝ (→ℝ (ψ (f k))) y)
-                      → RegressionConvergenceNoise →ℝ ψ k f
-theorem-noise {X} {Y} S →ℝ k f ψ C ε ε₀ = reg ⇒ (Φℝrule noise-diff) where
-  R : RegressionConvergence {X} {Y} →ℝ  k f
+                      → RegressionConvergenceNoise ψ k f
+theorem-noise {X} {Y} S →ℝ k f ψ C ε ε₀ = reg ⇒ (→ℝ ⇒ (Φℝrule noise-diff)) where
+  R : RegressionConvergence {X} {Y} k f
   R = theorem S →ℝ k f
   ℰₓ : (X → 𝔹) → X
   ℰₓ = Searchable.ε S
@@ -50,6 +51,6 @@ theorem-noise {X} {Y} S →ℝ k f ψ C ε ε₀ = reg ⇒ (Φℝrule noise-diff
   regδ = f (reg oracle f)
   noisy = ψ oracle
   Rconvδ : ((Φℝ (→ℝ oracle) (→ℝ regδ)) <ℝ δ) ≡ tt
-  Rconvδ = Π₁ (R δ δ₀)
+  Rconvδ = Π₁ (Π₁ (R δ δ₀))
   noise-diff : (Φℝ (Φℝ (→ℝ noisy) (→ℝ oracle)) (Φℝ (→ℝ noisy) (→ℝ regδ)) <ℝ ε) ≡ tt
   noise-diff = ∧r (Π₁ (C ε ε₀)) (→ℝ oracle) (→ℝ regδ) Rconvδ
