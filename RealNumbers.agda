@@ -1,6 +1,4 @@
 open import ToddPrelude
-open import CantorNumbers
-open import Searchers
 
 postulate ℝ : Set
 
@@ -33,11 +31,6 @@ record RealNumber (ℝ : Set) : Set where
 --  r >ℝ s = ! (r ≤ℝ s)
 
 postulate 𝕣 : RealNumber ℝ
-
-φ𝕓 : 𝕓 → 𝕓 → 𝕓
-φ𝕓 ₀ ₀ = ₀
-φ𝕓 ₁ ₁ = ₀
-φ𝕓 _ _ = ₁
 
 {-
 ℂReal : ℕ → RealNumber ℂ

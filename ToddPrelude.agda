@@ -147,8 +147,81 @@ data ∃ {X : Set} (P : X → Set) : Set where
 Π₁ : {X : Set} {A : X → Set} → (z : ∃ \(x : X) → A x) → A(Π₀ z)
 Π₁(_ ⇒ a) = a
 
-postulate FunExt : {A : Set} {B : A → Set} {f g : (x : A) → B x} → (∀ x → f x ≡ g x) → f ≡ g
-
 EFQ : {A : Set} → ∀ {a} → a ≡ tt → a ≡ ff → A
 EFQ {A} {ff} () x₁
 EFQ {A} {tt} x ()
+
+φ𝕓 : 𝕓 → 𝕓 → 𝕓
+φ𝕓 ₀ ₀ = ₀
+φ𝕓 ₁ ₁ = ₀
+φ𝕓 _ _ = ₁
+
+contra : ∀ a → (a ≡ tt → tt ≡ ff) → a ≡ ff
+contra a x = ∨-elim (𝔹LEM a) (λ x₁ → trans≡ x₁ (x x₁)) (λ x₁ → x₁)
+
+_&&!_ : ∀ {a b} → a ≡ tt → b ≡ tt → (a && b) ≡ tt
+refl &&! refl = refl
+
+&&? : ∀ {a b} → (a ≡ ff) ∨ (b ≡ ff) → (a && b) ≡ ff
+&&? {ff} {b} x = refl
+&&? {tt} {ff} x = refl
+&&? {tt} {tt} (inl ())
+&&? {tt} {tt} (inr ())
+
+||! : ∀ {a b} → (a ≡ tt) ∨ (b ≡ tt) → (a || b) ≡ tt
+||! {.tt} {b} (inl refl) = refl
+||! {ff} {ff} (inr ())
+||! {tt} {ff} (inr x) = refl
+||! {ff} {tt} (inr refl) = refl
+||! {tt} {tt} (inr x) = refl
+
+if-elim : ∀ a {b c} → (a ≡ tt → b ≡ tt) → (a ≡ ff → c ≡ tt) → (if a then b else c) ≡ tt
+if-elim ff x₀ x₁ = x₁ refl
+if-elim tt x₀ x₁ = x₀ refl
+
+||? : ∀ {a b} → (a ≡ ff) → (b ≡ ff) → (a || b) ≡ ff
+||? refl refl = refl
+
+&&l : ∀ {a b} → (a && b) ≡ tt → a ≡ tt
+&&l {tt} _ = refl
+&&l {ff} ()
+
+&&r : ∀ {b a} → (a && b) ≡ tt → b ≡ tt
+&&r {tt} _ = refl
+&&r {ff} {ff} ()
+&&r {ff} {tt} ()
+
+||l : ∀ {a b} → (a || b) ≡ ff → (a ≡ ff)
+||l {ff} _ = refl
+||l {tt} ()
+
+||r : ∀ {b a} → (a || b) ≡ ff → (b ≡ ff)
+||r {ff} _ = refl
+||r {tt} {ff} ()
+||r {tt} {tt} ()
+
+&&rl : ∀ {a b} → (a && b) ≡ ff → b ≡ tt → a ≡ ff
+&&rl {ff} _ _ = refl
+&&rl {_} {ff} _ ()
+&&rl {tt} {tt} () _
+
+&&rf : ∀ {a b} → (a && b) ≡ ff → a ≡ tt → b ≡ ff
+&&rf {_} {ff} _ _ = refl
+&&rf {ff} _ () 
+&&rf {tt} {tt} () _
+
+||rt : ∀ {a b} → (a || b) ≡ tt → a ≡ ff → b ≡ tt
+||rt {_} {tt} _ _ = refl
+||rt {ff} {ff} () _
+||rt {tt} {ff} _ ()
+
+||lt : ∀ {a b} → (a || b) ≡ tt → b ≡ ff → a ≡ tt
+||lt {tt} _ _ = refl
+||lt {ff} {tt} _ ()
+||lt {ff} {ff} () _
+
+MT : ∀ {a b} → (a ≡ tt → b ≡ tt) → b ≡ ff → a ≡ ff 
+MT {ff} {ff} x₁ x₂ = refl
+MT {ff} {tt} x₁ x₂ = refl
+MT {tt} {ff} x₁ refl = sym≡ (x₁ refl)
+MT {tt} {tt} x₁ ()
